@@ -1,3 +1,6 @@
+Aşağıdaki dosya, OSM yerine **P11729 (Kulturenvanteri monument ID) var/yok** durumunu denetler. Mevcut görünüm ve akış korunmuştur. Yalnızca sorgular, istatistikler, efsane ve popup mantığı P11729’a göre düzenlendi.
+
+```html
 # cembasli.github.io
 
 <!DOCTYPE html>
@@ -282,8 +285,8 @@
             margin-right: 10px;
         }
         
-        .osm-missing { background-color: #ff4757; }
-        .osm-exists { background-color: #2ed573; }
+        .osm-missing { background-color: #ff4757; } /* artık: P11729 YOK */
+        .osm-exists { background-color: #2ed573; } /* artık: P11729 VAR */
         
         @media (max-width: 768px) {
             .filter-grid {
@@ -311,42 +314,15 @@
     <div class="container">
         <div class="header">
             <h1>🌍 Wikidata Konumları Haritası</h1>
-            <p>Türkiye'deki kültürel miras alanlarının OpenStreetMap durumu</p>
+            <p>Türkiye'deki kültürel miras alanlarının <strong>P11729 (Kulturenvanteri monument ID)</strong> durumu</p>
             <div class="wikimedia-badge">
                 <small>🏛️ GitHub Pages üzerinde barındırılmaktadır</small>
             </div>
         </div>
 
         <div class="guide-section">
-            <h3>📚 OpenStreetMap ve Wikidata Arasında Bağlantı Kurma Rehberi</h3>
-            <p>OpenStreetMap'teki coğrafi veriler ile Wikidata'daki bilgileri birbirine bağlamak için iki yönlü bir süreç izlenir:</p>
-            
-            <div class="step">
-                <h4>1. Aşama: OpenStreetMap'e Wikidata Bilgisi Ekleme</h4>
-                <p>OpenStreetMap üzerinde bulunan mevcut Way (yol/alan) veya Relation (ilişki) öğesine <span class="property-code">wikidata=</span> etiketi eklenir. Bu etiketin değeri olarak Wikidata'daki ilgili öğenin Qid numarası (örneğin Q12345) yazılır.</p>
-            </div>
-
-            <div class="step">
-                <h4>2. Aşama: Wikidata'ya OpenStreetMap Bilgisi Ekleme</h4>
-                <p>Wikidata'daki ilgili Qid öğesine OpenStreetMap'teki way veya relation numarası eklenir. Bu işlem için aşağıdaki özellikler (Property) kullanılır:</p>
-                <ul>
-                    <li><strong><span class="property-code">P10689</span> - OpenStreetMap yol tanımlayıcı:</strong>
-                        <ul>
-                            <li>Tekil yapılar için kullanılır</li>
-                            <li>Binalar, camiler, müzeler, anıtlar gibi mimari yapılarda tercih edilir</li>
-                            <li>Kültürel varlıkların büyük çoğunluğu bu kategori altında yer alır</li>
-                        </ul>
-                    </li>
-                    <li><strong><span class="property-code">P402</span> - OpenStreetMap ilişki tanımlayıcı:</strong>
-                        <ul>
-                            <li>Çoklu yapı kompleksleri için kullanılır</li>
-                            <li>Külliyeler, üniversite kampüsleri, hastane kompleksleri gibi birden fazla yapıyı içeren yapı gruplarında tercih edilir</li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-            
-            <p><strong>Bu iki aşamalı süreç tamamlandığında, OpenStreetMap ve Wikidata arasında karşılıklı referans oluşturulmuş olur.</strong></p>
+            <h3>📚 P11729 (Kulturenvanteri monument ID) Durumu</h3>
+            <p>Bu harita, seçtiğiniz il/ilçe içindeki Wikidata öğelerinde <span class="property-code">P11729</span> özelliğinin var olup olmadığını gösterir.</p>
         </div>
         
         <div class="controls">
@@ -459,12 +435,12 @@
             <div class="legend">
                 <h4 style="margin: 0 0 10px 0;">🎨 Harita Gösterimi</h4>
                 <div class="legend-item">
-                    <div class="legend-color osm-missing"></div>
-                    <span>OpenStreetMap verisi bulunmayan alanlar</span>
+                    <div class="legend-color osm-exists"></div>
+                    <span>P11729 VAR (Kulturenvanteri monument ID mevcut)</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color osm-exists"></div>
-                    <span>OpenStreetMap verisi bulunan alanlar</span>
+                    <div class="legend-color osm-missing"></div>
+                    <span>P11729 YOK</span>
                 </div>
             </div>
         </div>
@@ -475,12 +451,12 @@
                 <div class="stat-label">Toplam Alan</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" id="osmMissing">0</div>
-                <div class="stat-label">OSM Verisi Yok</div>
+                <div class="stat-number" id="keExists">0</div>
+                <div class="stat-label">P11729 VAR</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" id="osmExists">0</div>
-                <div class="stat-label">OSM Verisi Var</div>
+                <div class="stat-number" id="keMissing">0</div>
+                <div class="stat-label">P11729 YOK</div>
             </div>
             <div class="stat-item">
                 <div class="stat-number" id="queryTime">0</div>
@@ -548,10 +524,7 @@
             const districtSelect = document.getElementById('districtSelect');
             
             if (provinceSelect.value === 'Q534799') { // İstanbul seçildi
-                // İlçe seçimini göster
                 districtGroup.style.display = 'block';
-                
-                // İlçe listesini temizle ve yeniden doldur
                 districtSelect.innerHTML = '<option value="">Tüm ilçeler</option>';
                 istanbulDistricts.forEach(district => {
                     const option = document.createElement('option');
@@ -560,7 +533,6 @@
                     districtSelect.appendChild(option);
                 });
             } else {
-                // İlçe seçimini gizle
                 districtGroup.style.display = 'none';
                 districtSelect.innerHTML = '<option value="">Tüm ilçeler</option>';
             }
@@ -581,97 +553,48 @@
             messageDiv.className = type;
             messageDiv.textContent = text;
             messagesDiv.appendChild(messageDiv);
-            
-            setTimeout(() => {
-                messageDiv.remove();
-            }, 5000);
+            setTimeout(() => { messageDiv.remove(); }, 5000);
         }
         
         function loadData() {
-            console.log('loadData fonksiyonu çağrıldı');
             const provinceSelect = document.getElementById('provinceSelect');
             const districtSelect = document.getElementById('districtSelect');
             const selectedProvince = provinceSelect.value;
             const selectedDistrict = districtSelect.value;
-            
-            console.log('Seçilen il:', selectedProvince);
-            console.log('Seçilen ilçe:', selectedDistrict);
-            
             if (!selectedProvince) {
                 showMessage('Lütfen bir il seçin!', 'error');
                 return;
             }
-            
             const provinceName = provinceSelect.options[provinceSelect.selectedIndex].text;
-            console.log('İl adı:', provinceName);
-            
-            // Sadece OpenStreetMap verisi olmayan alanları göster
-            runOSMQuery(selectedProvince, provinceName, selectedDistrict);
+            runKEQuery(selectedProvince, provinceName, selectedDistrict);
         }
         
-        async function runOSMQuery(provinceQID, provinceName, districtQID = null) {
-            let locationFilter = '';
+        // P11729 var/yok durumunu sorgulayan SPARQL
+        async function runKEQuery(provinceQID, provinceName, districtQID = null) {
+            let locationPath = '';
             let locationName = provinceName;
-            
             if (districtQID) {
-                // İlçe seçildiyse, sadece o ilçede ara
-                locationFilter = `wdt:P131*/wdt:P131* wd:${districtQID};`;
+                locationPath = `wdt:P131*/wdt:P131* wd:${districtQID};`;
                 const districtName = istanbulDistricts.find(d => d.qid === districtQID)?.name;
                 locationName = `${districtName}, ${provinceName}`;
             } else {
-                // İl genelinde ara
-                locationFilter = `wdt:P131*/wdt:P131* wd:${provinceQID};`;
+                locationPath = `wdt:P131*/wdt:P131* wd:${provinceQID};`;
             }
             
-            const query = `SELECT DISTINCT ?place ?placeLabel ?coordinates (SAMPLE(?layerLabel) AS ?layer) (SAMPLE(?osmWay) AS ?osmWay) (SAMPLE(?osmRel) AS ?osmRel) (SAMPLE(?osmNode) AS ?osmNode) (SAMPLE(?keID) AS ?keID)
+            const query = `SELECT DISTINCT ?place ?placeLabel ?coordinates (SAMPLE(?kid) AS ?keID)
 WHERE {
-  ?place wdt:P17 wd:Q43;              # Ülkesi Türkiye
-         ${locationFilter}            # Seçilen alan içinde
-         wdt:P11729 ?keID.             # KE ID mevcut
-  OPTIONAL { ?place wdt:P5816 ?status. }    # Koruma durumu varsa al
-  OPTIONAL { ?place wdt:P11693 ?osmNode. }      # OSM node ID
-  OPTIONAL { ?place wdt:P10689 ?osmWay. }      # OSM way ID
-  OPTIONAL { ?place wdt:P402 ?osmRel. }  # OSM relation ID
-  OPTIONAL { ?place wdt:P625 ?coordinates. }  # Koordinat varsa
-  # İstediğimiz filtre:
-  FILTER(
-    !BOUND(?status) || 
-    (?status IN (wd:Q56557591, wd:Q75505084, wd:Q117841865, wd:Q27132179))
-  )
-  BIND(
-    IF(BOUND(?osmNode) || BOUND(?osmWay) || BOUND(?osmRel),
-      "OSM verisi var",
-      "OSM verisi yok"
-    ) AS ?layerLabel
-  )
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],tr". }
-}
-GROUP BY ?place ?placeLabel ?coordinates`;
-
-            await runQuery(query, locationName, 'openstreetmap');
+  ?place wdt:P17 wd:Q43;               # Ülkesi Türkiye
+         ${locationPath}               # Seçilen alan içinde
+         wdt:P625 ?coordinates .       # Koordinatı olanlar
+  OPTIONAL { ?place wdt:P11729 ?kid }  # Kulturenvanteri monument ID (P11729)
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],tr,en". }
+}`;
+            await runQuery(query, locationName);
         }
         
-        async function runCommonsQuery(provinceQID, provinceName) {
-            const query = `SELECT DISTINCT ?place ?placeLabel ?coordinates ?image
-WHERE {
-  ?place wdt:P17 wd:Q43;              # Ülkesi Türkiye
-         wdt:P131*/wdt:P131* wd:${provinceQID}; # ${provinceName} ili içinde
-         wdt:P11729 ?keID.             # KE ID mevcut
-  OPTIONAL { ?place wdt:P625 ?coordinates. }  # Koordinat varsa
-  OPTIONAL { ?place wdt:P18 ?image. }         # Görsel varsa
-  FILTER(!BOUND(?image))              # Görseli olmayan
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],tr". }
-}
-LIMIT 100`;
-
-            await runQuery(query, provinceName, 'commons');
-        }
-        
-        async function runQuery(query, locationName, category) {
+        async function runQuery(query, locationName) {
             const loading = document.getElementById('loading');
             const loadBtn = document.getElementById('loadBtn');
-            const selectedProvince = document.getElementById('provinceSelect').value; // Bu satırı ekledik
-            
             loading.style.display = 'block';
             loadBtn.disabled = true;
             loadBtn.textContent = '⏳ Yükleniyor...';
@@ -682,170 +605,96 @@ LIMIT 100`;
             try {
                 const url = `https://query.wikidata.org/sparql?query=${encodeURIComponent(query)}&format=json`;
                 const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 
                 const data = await response.json();
                 const results = data.results.bindings;
                 const queryTime = ((Date.now() - startTime) / 1000).toFixed(2);
                 
                 let mappedCount = 0;
-                let osmMissingCount = 0;
-                let osmExistsCount = 0;
+                let keMissingCount = 0;
+                let keExistsCount = 0;
                 let bounds = [];
                 
                 results.forEach(result => {
-                    if (result.coordinates && result.coordinates.value) {
-                        const coordString = result.coordinates.value;
-                        const match = coordString.match(/Point\(([^ ]+) ([^ ]+)\)/);
-                        
-                        if (match) {
-                            const lng = parseFloat(match[1]);
-                            const lat = parseFloat(match[2]);
-                            
-                            const label = result.placeLabel ? result.placeLabel.value : 'Bilinmeyen';
-                            const itemUrl = result.place.value;
-                            const qid = itemUrl.split('/').pop();
-                            const keID = result.keID ? result.keID.value : null;
-                            
-                            // OSM verilerini kontrol et
-                            const osmWay = result.osmWay ? result.osmWay.value : null;
-                            const osmRel = result.osmRel ? result.osmRel.value : null;
-                            const osmNode = result.osmNode ? result.osmNode.value : null;
-                            
-                            // OSM durumunu belirle
-                            let hasOsmData = false;
-                            let markerColor = '#ff4757';
-                            let osmUrl = null;
-                            let osmId = null;
-                            
-                            if (category === 'openstreetmap') {
-                                hasOsmData = result.layer && result.layer.value === "OSM verisi var";
-                                markerColor = hasOsmData ? '#2ed573' : '#ff4757';
-                                
-                                // OSM URL'ini belirle (öncelik sırası: way > relation > node)
-                                if (osmWay) {
-                                    osmUrl = `https://www.openstreetmap.org/way/${osmWay}`;
-                                    osmId = `way/${osmWay}`;
-                                } else if (osmRel) {
-                                    osmUrl = `https://www.openstreetmap.org/relation/${osmRel}`;
-                                    osmId = `relation/${osmRel}`;
-                                } else if (osmNode) {
-                                    osmUrl = `https://www.openstreetmap.org/node/${osmNode}`;
-                                    osmId = `node/${osmNode}`;
-                                }
-                                
-                                if (hasOsmData) {
-                                    osmExistsCount++;
-                                } else {
-                                    osmMissingCount++;
-                                }
-                            } else {
-                                // Commons kategorisi için kırmızı (görsel yok)
-                                osmMissingCount++;
-                            }
-                            
-                            // Özel marker ikonu
-                            const customIcon = L.divIcon({
-                                className: 'custom-marker',
-                                html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-                                iconSize: [16, 16],
-                                iconAnchor: [8, 8]
-                            });
-                            
-                            // Popup içeriği
-                            let popupContent = `<div style="max-width: 300px;">`;
-                            popupContent += `<h4 style="margin: 0 0 10px 0; color: #006699;">${label}</h4>`;
-                            
-                            if (category === 'openstreetmap') {
-                                if (hasOsmData && osmUrl && osmId) {
-                                    popupContent += `<p><strong>Durum:</strong> <span style="color: #2ed573;">✅ OSM verisi mevcut</span> - <a href="${osmUrl}" target="_blank" style="color: #006699; text-decoration: none; background: #e8f4fd; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.9em;">${osmId}</a></p>`;
-                                } else {
-                                    // OSM'de arama URL'i oluştur
-                                    const osmSearchUrl = `https://www.openstreetmap.org/query?lat=${lat}&lon=${lng}#map=19/${lat}/${lng}`;
-                                    popupContent += `<p><strong>Durum:</strong> <span style="color: #ff4757;">❌ OSM verisi eksik</span> - <a href="${osmSearchUrl}" target="_blank" style="color: #ff4757; text-decoration: none; background: #ffe8e8; padding: 2px 6px; border-radius: 4px; font-size: 0.9em;">🔍 OSM'de ara</a></p>`;
-                                }
-                            } else {
-                                popupContent += `<p><strong>Durum:</strong> <span style="color: #ff4757;">📷 Commons görseli eksik</span></p>`;
-                            }
-                            
-                            popupContent += `<p><strong>Konum:</strong> ${locationName}</p>`;
-                            popupContent += `<p><strong>Wikidata:</strong> <a href="${itemUrl}" target="_blank" style="color: #006699;">${qid}</a></p>`;
-                            
-                            // Diğer bağlantılar bölümü
-                            popupContent += `<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">`;
-                            popupContent += `<h5 style="margin: 0 0 8px 0; color: #666; font-size: 0.9em;">🔗 Diğer Bağlantılar</h5>`;
-                            
-                            // Google Maps bağlantısı
-                            const googleMapsUrl = `https://www.google.com/maps/place/${lat},${lng}`;
-                            popupContent += `<p style="margin: 5px 0;"><a href="${googleMapsUrl}" target="_blank" style="color: #006699; text-decoration: none; background: #f0f8ff; padding: 3px 8px; border-radius: 4px; display: inline-block; font-size: 0.9em;">🌍 Google Maps'te ara</a></p>`;
-                            
-                            // Google Earth bağlantısı
-                            // Koordinatları derece, dakika, saniye formatına çevir
-                            function convertToDMS(coord, isLat) {
-                                const absCoord = Math.abs(coord);
-                                const degrees = Math.floor(absCoord);
-                                const minutes = Math.floor((absCoord - degrees) * 60);
-                                const seconds = ((absCoord - degrees - minutes/60) * 3600).toFixed(1);
-                                const direction = isLat ? (coord >= 0 ? 'N' : 'S') : (coord >= 0 ? 'E' : 'W');
-                                return `${degrees}%C2%B0${minutes}'${seconds}%22${direction}`;
-                            }
-                            
-                            const latDMS = convertToDMS(lat, true);
-                            const lngDMS = convertToDMS(lng, false);
-                            const googleEarthUrl = `https://earth.google.com/web/search/${latDMS}%20${lngDMS}/@${lat},${lng},1000a,2000d,35y,0h,0t,0r`;
-                            popupContent += `<p style="margin: 5px 0;"><a href="${googleEarthUrl}" target="_blank" style="color: #006699; text-decoration: none; background: #f0f8ff; padding: 3px 8px; border-radius: 4px; display: inline-block; font-size: 0.9em;">🌎 Google Earth'te ara</a></p>`;
-                            
-                            // Yandex Maps bağlantısı
-                            const yandexMapsUrl = `https://yandex.com/maps/?ll=${lng}%2C${lat}&z=16`;
-                            popupContent += `<p style="margin: 5px 0;"><a href="${yandexMapsUrl}" target="_blank" style="color: #006699; text-decoration: none; background: #f0f8ff; padding: 3px 8px; border-radius: 4px; display: inline-block; font-size: 0.9em;">🗺️ Yandex Maps'te ara</a></p>`;
-                            
-                            // İBB Kültür Envanteri bağlantısı (sadece İstanbul için)
-                            const districtSelect = document.getElementById('districtSelect');
-                            const selectedDistrict = districtSelect.value;
-                            
-                            if (selectedProvince === 'Q534799' || (selectedDistrict && istanbulDistricts.some(d => d.qid === selectedDistrict))) {
-                                const ibbUrl = `https://kulturenvanteri.ibb.gov.tr/portal/apps/webappviewer/index.html?id=62758a0e55e6462e9dbff7d5737e5ed2&marker=${lng},${lat},&level=18`;
-                                popupContent += `<p style="margin: 5px 0;"><a href="${ibbUrl}" target="_blank" style="color: #006699; text-decoration: none; background: #f0f8ff; padding: 3px 8px; border-radius: 4px; display: inline-block; font-size: 0.9em;">🏢 İBB'de ara</a></p>`;
-                            }
-                            
-                            // Kültür Envanteri bağlantısı
-                            if (keID) {
-                                const keUrl = `https://kulturenvanteri.com/yer/?p=${keID}`;
-                                popupContent += `<p style="margin: 5px 0;"><a href="${keUrl}" target="_blank" style="color: #006699; text-decoration: none; background: #f0f8ff; padding: 3px 8px; border-radius: 4px; display: inline-block; font-size: 0.9em;">🏛️ KE'de ara</a></p>`;
-                            }
-                            
-                            popupContent += `</div>`;
-                            popupContent += `</div>`;
-                            
-                            const marker = L.marker([lat, lng], { icon: customIcon })
-                                .bindPopup(popupContent);
-                            
-                            // Marker'a tıklama olayı ekle
-                            marker.on('click', function() {
-                                // Popup'ı aç
-                                this.openPopup();
-                            });
-                            
-                            markersGroup.addLayer(marker);
-                            bounds.push([lat, lng]);
-                            mappedCount++;
-                        }
+                    if (!result.coordinates || !result.coordinates.value) return;
+                    const coordString = result.coordinates.value;
+                    const match = coordString.match(/Point\(([^ ]+) ([^ ]+)\)/);
+                    if (!match) return;
+                    
+                    const lng = parseFloat(match[1]);
+                    const lat = parseFloat(match[2]);
+                    const label = result.placeLabel ? result.placeLabel.value : 'Bilinmeyen';
+                    const itemUrl = result.place.value;
+                    const qid = itemUrl.split('/').pop();
+                    const keID = result.keID ? result.keID.value : null;
+                    
+                    const hasKE = !!keID;
+                    const markerColor = hasKE ? '#2ed573' : '#ff4757';
+                    if (hasKE) keExistsCount++; else keMissingCount++;
+                    
+                    const customIcon = L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    });
+                    
+                    let popupContent = `<div style="max-width: 300px;">`;
+                    popupContent += `<h4 style="margin: 0 0 10px 0; color: #006699;">${escapeHtml(label)}</h4>`;
+                    popupContent += `<p><strong>P11729:</strong> ${
+                        hasKE 
+                        ? `<a href="https://kulturenvanteri.com/yer/?p=${encodeURIComponent(keID)}" target="_blank" style="color:#006699;text-decoration:none;background:#e8f4fd;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.9em;">${keID}</a>` 
+                        : `<span style="color:#ff4757;">YOK</span>`}</p>`;
+                    popupContent += `<p><strong>Konum:</strong> ${escapeHtml(locationName)}</p>`;
+                    popupContent += `<p><strong>Wikidata:</strong> <a href="${itemUrl}" target="_blank" style="color:#006699;">${qid}</a></p>`;
+                    
+                    // Harici harita bağlantıları
+                    const googleMapsUrl = `https://www.google.com/maps/place/${lat},${lng}`;
+                    popupContent += `<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">`;
+                    popupContent += `<h5 style="margin:0 0 8px 0;color:#666;font-size:0.9em;">🔗 Bağlantılar</h5>`;
+                    popupContent += `<p style="margin:5px 0;"><a href="${googleMapsUrl}" target="_blank" style="color:#006699;background:#f0f8ff;padding:3px 8px;border-radius:4px;display:inline-block;font-size:0.9em;">🌍 Google Maps</a></p>`;
+                    
+                    // Google Earth DMS
+                    function convertToDMS(coord, isLat) {
+                        const absCoord = Math.abs(coord);
+                        const degrees = Math.floor(absCoord);
+                        const minutes = Math.floor((absCoord - degrees) * 60);
+                        const seconds = ((absCoord - degrees - minutes/60) * 3600).toFixed(1);
+                        const direction = isLat ? (coord >= 0 ? 'N' : 'S') : (coord >= 0 ? 'E' : 'W');
+                        return `${degrees}%C2%B0${minutes}'${seconds}%22${direction}`;
                     }
+                    const latDMS = convertToDMS(lat, true);
+                    const lngDMS = convertToDMS(lng, false);
+                    const googleEarthUrl = `https://earth.google.com/web/search/${latDMS}%20${lngDMS}/@${lat},${lng},1000a,2000d,35y,0h,0t,0r`;
+                    popupContent += `<p style="margin:5px 0;"><a href="${googleEarthUrl}" target="_blank" style="color:#006699;background:#f0f8ff;padding:3px 8px;border-radius:4px;display:inline-block;font-size:0.9em;">🌎 Google Earth</a></p>`;
+                    
+                    // Yandex
+                    const yandexMapsUrl = `https://yandex.com/maps/?ll=${lng}%2C${lat}&z=16`;
+                    popupContent += `<p style="margin:5px 0;"><a href="${yandexMapsUrl}" target="_blank" style="color:#006699;background:#f0f8ff;padding:3px 8px;border-radius:4px;display:inline-block;font-size:0.9em;">🗺️ Yandex Maps</a></p>`;
+                    
+                    // İBB katmanı (yalnız İstanbul için)
+                    const provinceVal = document.getElementById('provinceSelect').value;
+                    const districtVal = document.getElementById('districtSelect').value;
+                    if (provinceVal === 'Q534799' || (districtVal && istanbulDistricts.some(d => d.qid === districtVal))) {
+                        const ibbUrl = `https://kulturenvanteri.ibb.gov.tr/portal/apps/webappviewer/index.html?id=62758a0e55e6462e9dbff7d5737e5ed2&marker=${lng},${lat},&level=18`;
+                        popupContent += `<p style="margin:5px 0;"><a href="${ibbUrl}" target="_blank" style="color:#006699;background:#f0f8ff;padding:3px 8px;border-radius:4px;display:inline-block;font-size:0.9em;">🏢 İBB Katmanı</a></p>`;
+                    }
+                    popupContent += `</div></div>`;
+                    
+                    const marker = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
+                    markersGroup.addLayer(marker);
+                    bounds.push([lat, lng]);
+                    mappedCount++;
                 });
                 
-                if (bounds.length > 0) {
-                    map.fitBounds(bounds);
-                } else {
-                    showMessage(`${locationName} bölgesinde bu kriterlere uygun veri bulunamadı.`, 'error');
-                }
+                if (bounds.length > 0) map.fitBounds(bounds);
+                else showMessage(`${locationName} bölgesinde bu kriterlere uygun veri bulunamadı.`, 'error');
                 
-                // İstatistikleri güncelle
+                // İstatistikler
                 document.getElementById('totalResults').textContent = results.length;
-                document.getElementById('osmMissing').textContent = osmMissingCount;
-                document.getElementById('osmExists').textContent = osmExistsCount;
+                document.getElementById('keExists').textContent = keExistsCount;
+                document.getElementById('keMissing').textContent = keMissingCount;
                 document.getElementById('queryTime').textContent = queryTime;
                 document.getElementById('stats').style.display = 'flex';
                 
@@ -860,6 +709,12 @@ LIMIT 100`;
                 loadBtn.textContent = '📍 Verileri Getir';
             }
         }
+
+        // Basit HTML escape
+        function escapeHtml(s) {
+          return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+        }
     </script>
 </body>
 </html>
+```
