@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kültür Envanteri Haritası</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-o9N1j8Mk1bbykNgGZj7sCjU5bsvk6LVsCz0PsF+lgWc="
+      crossorigin=""
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        height: 100%;
+        color: #1f2933;
+        background-color: #f5f7fa;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        height: 100vh;
+      }
+
+      #map {
+        height: 100%;
+      }
+
+      aside[data-side-panel] {
+        border-left: 1px solid #d2d6dc;
+        background-color: #fff;
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+        gap: 1rem;
+      }
+
+      .side-panel__header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+      }
+
+      .side-panel__meta {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        color: #52606d;
+        font-size: 0.9rem;
+      }
+
+      .side-panel__note {
+        flex: 1;
+        padding: 1rem;
+        border: 1px solid #d2d6dc;
+        border-radius: 0.75rem;
+        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        box-shadow: inset 0 1px 2px rgba(31, 41, 55, 0.08);
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+
+      .side-panel__note[data-empty='true'] {
+        color: #9aa5b1;
+        font-style: italic;
+      }
+
+      .side-panel__footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .side-panel__mode {
+        font-size: 0.85rem;
+        color: #9aa5b1;
+      }
+
+      .side-panel__mode[data-mode='edit'] {
+        color: #0b7285;
+        font-weight: 600;
+      }
+
+      button[data-mode-toggle] {
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        border: none;
+        background: #1c7ed6;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .entry-popup {
+        max-width: 260px;
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .entry-popup__header {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .entry-popup__title {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .entry-popup__meta-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: #52606d;
+      }
+
+      .entry-popup__meta-label {
+        font-weight: 600;
+      }
+
+      .entry-popup__preview {
+        font-size: 0.85rem;
+        color: #364152;
+      }
+
+      .entry-popup__gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+        gap: 0.25rem;
+      }
+
+      .entry-popup__thumb {
+        border: none;
+        padding: 0;
+        background: none;
+        border-radius: 0.5rem;
+        overflow: hidden;
+      }
+
+      .entry-popup__thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .entry-popup__links {
+        display: grid;
+        gap: 0.25rem;
+        font-size: 0.8rem;
+        color: #1c7ed6;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div id="map"></div>
+      <aside data-side-panel data-mode="read">
+        <header class="side-panel__header">
+          <h2 data-entry-title>Seçili Mekan</h2>
+          <div class="side-panel__meta" data-entry-meta></div>
+        </header>
+        <section class="side-panel__note" data-entry-note data-empty="true">
+          Henüz not yok.
+        </section>
+        <footer class="side-panel__footer">
+          <div class="side-panel__mode" data-mode="read">Okuma modu</div>
+          <button data-mode-toggle type="button">Düzenlemeye geç</button>
+        </footer>
+      </aside>
+    </main>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-o9N1j8Mk1bbykNgGZj7sCjU5bsvk6LVsCz0PsF+lgWc="
+      crossorigin=""
+    ></script>
+    <script type="module">
+      import './src/app.js';
+    </script>
+  </body>
+</html>
