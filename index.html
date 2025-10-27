@@ -33,8 +33,8 @@
           <header class="editor__header">
             <h3 class="editor__title">Envanter notları</h3>
             <p class="editor__hint">
-              Haritadan bir hazire seçtikten sonra açıklama ekleyebilir, düzenleyebilir ve görseller
-              yükleyebilirsiniz.
+              Haritadan bir hazire seçtikten sonra kaydedilmiş envanteri görebilir, düzenleyebilir ve
+              görseller yükleyebilirsiniz.
             </p>
           </header>
           <div class="editor__toolbar" role="toolbar" aria-label="Metin biçimlendirme">
@@ -58,16 +58,20 @@
               <input type="file" id="image-input" accept="image/*" multiple />
             </label>
           </div>
+          <div id="entry-display" class="editor__display" aria-live="polite">
+            Henüz bir hazire seçilmedi.
+          </div>
           <div
             id="entry-editor"
             class="editor__surface"
-            contenteditable="true"
+            contenteditable="false"
             role="textbox"
             aria-multiline="true"
             aria-label="Hazire envanteri açıklaması"
             spellcheck="true"
           ></div>
           <div class="editor__actions">
+            <button type="button" class="edit-button" id="edit-entry" disabled>Düzenle</button>
             <button type="button" class="save-button" id="save-entry" disabled>Kaydet</button>
           </div>
           <section class="gallery" aria-live="polite">

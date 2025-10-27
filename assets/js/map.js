@@ -27,25 +27,35 @@ const panelDateNode = document.getElementById('panel-date');
 const panelMeIdNode = document.getElementById('panel-me-id');
 const editorContainer = document.getElementById('entry-editor-container');
 const editorSurface = document.getElementById('entry-editor');
+const editorDisplay = document.getElementById('entry-display');
+const editButton = document.getElementById('edit-entry');
 const saveButton = document.getElementById('save-entry');
 const imageInput = document.getElementById('image-input');
 const galleryList = document.getElementById('image-gallery');
 const galleryEmptyMessage = document.getElementById('gallery-empty');
 const toolbarButtons = Array.from(document.querySelectorAll('.toolbar-button'));
+const toolbarUpload = document.querySelector('.toolbar-upload');
 const panelCountNode = document.getElementById('cemetery-count');
 
 const STORAGE_KEY = 'me-inventory-entries';
-const COUNTER_KEY = 'me-inventory-counter';
-const DEFAULT_SELECTION_MESSAGE = 'Envanter notlarını düzenleyebilirsiniz.';
+const ME_ID_ASSIGNMENTS_KEY = 'me-inventory-id-map';
+const ME_ID_SEQUENCE_KEY = 'me-inventory-id-sequence';
+const DEFAULT_SELECTION_MESSAGE =
+  'Kaydedilmiş envanteri görüntülüyor ve "Düzenle" ile güncelleyebilirsiniz.';
 const COUNT_LOADING_TEXT = 'Toplam hazire: yükleniyor…';
 const COUNT_ERROR_TEXT = 'Toplam hazire: yüklenemedi.';
 const DATE_UNKNOWN_TEXT = 'Bilgi bulunamadı';
 const WIKIDATA_ENDPOINT = 'https://query.wikidata.org/sparql';
 
 let entriesStore = loadEntriesFromStorage();
+let meIdAssignments = loadMeIdAssignments();
+let nextMeSequence = loadNextMeSequence();
 let currentEntryKey = null;
 let currentEntryState = null;
 let statusResetHandle = null;
+let isEditing = false;
+
+syncSequenceWithAssignments();
 
 function escapeHtml(value) {
   const stringValue = value == null ? '' : String(value);
@@ -140,20 +150,128 @@ function saveEntriesToStorage(value) {
   }
 }
 
-function generateMeId() {
-  let nextValue = 1000;
-
-  const storedValue = localStorage.getItem(COUNTER_KEY);
-  if (storedValue) {
-    const parsed = Number.parseInt(storedValue, 10);
-    if (!Number.isNaN(parsed)) {
-      nextValue = parsed;
+function loadMeIdAssignments() {
+  try {
+    const raw = localStorage.getItem(ME_ID_ASSIGNMENTS_KEY);
+    if (!raw) {
+      return {};
     }
+
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed;
+    }
+  } catch (error) {
+    console.warn('ME ID eşleştirmeleri okunamadı:', error);
   }
 
-  const meIdNumber = nextValue + 1;
-  localStorage.setItem(COUNTER_KEY, String(meIdNumber));
-  return `ME-${meIdNumber}`;
+  return {};
+}
+
+function saveMeIdAssignments(value) {
+  try {
+    localStorage.setItem(ME_ID_ASSIGNMENTS_KEY, JSON.stringify(value));
+  } catch (error) {
+    console.warn('ME ID eşleştirmeleri kaydedilemedi:', error);
+  }
+}
+
+function loadNextMeSequence() {
+  const storedValue = localStorage.getItem(ME_ID_SEQUENCE_KEY);
+  if (!storedValue) {
+    return 0;
+  }
+
+  const parsed = Number.parseInt(storedValue, 10);
+  if (Number.isNaN(parsed) || parsed < 0) {
+    return 0;
+  }
+
+  return parsed;
+}
+
+function saveNextMeSequence(value) {
+  try {
+    localStorage.setItem(ME_ID_SEQUENCE_KEY, String(value));
+  } catch (error) {
+    console.warn('ME ID sırası kaydedilemedi:', error);
+  }
+}
+
+function indexToLetters(index) {
+  if (index <= 0) {
+    return 'A';
+  }
+
+  let value = index;
+  let result = '';
+  while (value > 0) {
+    const remainder = (value - 1) % 26;
+    result = String.fromCharCode(65 + remainder) + result;
+    value = Math.floor((value - 1) / 26);
+  }
+  return result;
+}
+
+function assignNextMeId() {
+  nextMeSequence += 1;
+  saveNextMeSequence(nextMeSequence);
+  const letters = indexToLetters(nextMeSequence);
+  const paddedNumber = String(nextMeSequence).padStart(4, '0');
+  return `ME-${letters}${paddedNumber}`;
+}
+
+function ensureEntryMeId(entryId) {
+  if (!entryId) {
+    return null;
+  }
+
+  const storedEntry = entriesStore[entryId];
+  if (storedEntry && storedEntry.meId) {
+    meIdAssignments[entryId] = storedEntry.meId;
+    saveMeIdAssignments(meIdAssignments);
+    return storedEntry.meId;
+  }
+
+  const assigned = meIdAssignments[entryId];
+  if (assigned) {
+    return assigned;
+  }
+
+  const newMeId = assignNextMeId();
+  meIdAssignments[entryId] = newMeId;
+  saveMeIdAssignments(meIdAssignments);
+  return newMeId;
+}
+
+function syncSequenceWithAssignments() {
+  if (!meIdAssignments || typeof meIdAssignments !== 'object') {
+    return;
+  }
+
+  const values = Object.values(meIdAssignments);
+  let maxSequence = nextMeSequence;
+
+  values.forEach((value) => {
+    if (typeof value !== 'string') {
+      return;
+    }
+
+    const match = value.match(/ME-[A-Z]+(\d+)/i);
+    if (!match) {
+      return;
+    }
+
+    const numericPart = Number.parseInt(match[1], 10);
+    if (!Number.isNaN(numericPart) && numericPart > maxSequence) {
+      maxSequence = numericPart;
+    }
+  });
+
+  if (maxSequence > nextMeSequence) {
+    nextMeSequence = maxSequence;
+    saveNextMeSequence(nextMeSequence);
+  }
 }
 
 function cloneEntryState(entryKey) {
@@ -166,7 +284,13 @@ function cloneEntryState(entryKey) {
   const images = Array.isArray(stored.images)
     ? stored.images
         .filter((image) => image && typeof image === 'object')
-        .map((image) => ({ id: image.id, name: image.name, dataUrl: image.dataUrl }))
+        .map((image) => ({
+          id: image.id,
+          name: image.name,
+          dataUrl: image.dataUrl,
+          caption: image.caption || '',
+          storedName: image.storedName || null,
+        }))
     : [];
 
   return {
@@ -188,20 +312,40 @@ function persistCurrentEntry() {
   };
 
   saveEntriesToStorage(entriesStore);
+
+  if (currentEntryState.meId) {
+    meIdAssignments[currentEntryKey] = currentEntryState.meId;
+    saveMeIdAssignments(meIdAssignments);
+  }
 }
 
 function setEditorEnabled(enabled) {
-  if (!editorContainer || !editorSurface || !saveButton) {
+  if (!editorContainer || !editorSurface || !saveButton || !editorDisplay) {
     return;
   }
 
   editorContainer.setAttribute('aria-disabled', enabled ? 'false' : 'true');
-  editorSurface.setAttribute('contenteditable', enabled ? 'true' : 'false');
-  editorSurface.setAttribute('aria-disabled', enabled ? 'false' : 'true');
-  saveButton.disabled = !enabled;
 
   if (!enabled) {
+    editorContainer.classList.remove('is-editing');
+    editorSurface.setAttribute('contenteditable', 'false');
+    editorSurface.setAttribute('aria-disabled', 'true');
     editorSurface.innerHTML = '';
+    editorDisplay.textContent = 'Henüz bir hazire seçilmedi.';
+    saveButton.disabled = true;
+    if (editButton) {
+      editButton.disabled = true;
+    }
+    toolbarButtons.forEach((button) => {
+      button.disabled = true;
+    });
+    if (toolbarUpload) {
+      toolbarUpload.setAttribute('aria-disabled', 'true');
+    }
+    if (imageInput) {
+      imageInput.disabled = true;
+      imageInput.value = '';
+    }
     if (panelLabelNode) {
       panelLabelNode.textContent = 'Haritadan bir hazire seçin';
     }
@@ -215,7 +359,93 @@ function setEditorEnabled(enabled) {
       panelDateNode.textContent = '—';
     }
     renderImageGallery([]);
+    isEditing = false;
+    return;
   }
+
+  editorSurface.setAttribute('aria-disabled', 'true');
+  editorSurface.setAttribute('contenteditable', 'false');
+  editorContainer.classList.remove('is-editing');
+  saveButton.disabled = true;
+  if (editButton) {
+    editButton.disabled = false;
+  }
+  toolbarButtons.forEach((button) => {
+    button.disabled = true;
+  });
+  if (toolbarUpload) {
+    toolbarUpload.setAttribute('aria-disabled', 'true');
+  }
+  if (imageInput) {
+    imageInput.disabled = true;
+  }
+  isEditing = false;
+}
+
+function setEditingMode(enabled) {
+  if (!editorContainer || !editorSurface || !saveButton) {
+    return;
+  }
+
+  isEditing = enabled;
+
+  if (enabled) {
+    editorContainer.classList.add('is-editing');
+    editorSurface.setAttribute('contenteditable', 'true');
+    editorSurface.setAttribute('aria-disabled', 'false');
+    saveButton.disabled = false;
+    if (editButton) {
+      editButton.disabled = true;
+    }
+    toolbarButtons.forEach((button) => {
+      button.disabled = false;
+    });
+    if (toolbarUpload) {
+      toolbarUpload.setAttribute('aria-disabled', 'false');
+    }
+    if (imageInput) {
+      imageInput.disabled = false;
+    }
+    editorSurface.focus();
+    if (currentEntryState) {
+      renderImageGallery(currentEntryState.images);
+    }
+    return;
+  }
+
+  editorContainer.classList.remove('is-editing');
+  editorSurface.setAttribute('contenteditable', 'false');
+  editorSurface.setAttribute('aria-disabled', 'true');
+  saveButton.disabled = true;
+  if (editButton) {
+    editButton.disabled = false;
+  }
+  toolbarButtons.forEach((button) => {
+    button.disabled = true;
+  });
+  if (toolbarUpload) {
+    toolbarUpload.setAttribute('aria-disabled', 'true');
+  }
+  if (imageInput) {
+    imageInput.disabled = true;
+    imageInput.value = '';
+  }
+  if (currentEntryState) {
+    renderImageGallery(currentEntryState.images);
+  }
+}
+
+function renderEntryDisplay(content) {
+  if (!editorDisplay) {
+    return;
+  }
+
+  if (content && content.trim().length > 0) {
+    editorDisplay.innerHTML = content;
+    return;
+  }
+
+  editorDisplay.innerHTML = '<p class="editor__placeholder">Henüz not eklenmedi.</p>';
 }
 
 function sanitizeEditorHtml(html) {
@@ -340,12 +570,45 @@ function renderImageGallery(images) {
     img.alt = image.name ? `Hazire görseli: ${image.name}` : 'Hazire görseli';
     item.appendChild(img);
 
+    const meta = document.createElement('div');
+    meta.className = 'gallery__meta';
+
+    const filename = document.createElement('p');
+    filename.className = 'gallery__filename';
+    filename.textContent = image.storedName || image.name || 'Hazire görseli';
+    meta.appendChild(filename);
+
+    const caption = document.createElement('p');
+    caption.className = 'gallery__caption';
+    if (image.caption && image.caption.trim().length > 0) {
+      caption.textContent = image.caption;
+    } else {
+      caption.textContent = 'Altyazı eklenmedi.';
+      caption.classList.add('gallery__caption--empty');
+    }
+    meta.appendChild(caption);
+
+    const actions = document.createElement('div');
+    actions.className = 'gallery__actions';
+
+    const captionButton = document.createElement('button');
+    captionButton.type = 'button';
+    captionButton.className = 'gallery__caption-button';
+    captionButton.dataset.imageId = image.id;
+    captionButton.textContent = image.caption && image.caption.trim().length > 0 ? 'Altyazıyı düzenle' : 'Altyazı ekle';
+    captionButton.disabled = !isEditing;
+    actions.appendChild(captionButton);
+
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
     removeButton.className = 'gallery__remove';
     removeButton.textContent = 'Sil';
     removeButton.dataset.imageId = image.id;
-    item.appendChild(removeButton);
+    removeButton.disabled = !isEditing;
+    actions.appendChild(removeButton);
+
+    meta.appendChild(actions);
+    item.appendChild(meta);
 
     galleryList.appendChild(item);
   });
@@ -357,6 +620,28 @@ function createImageId() {
   }
 
   return `img-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+}
+
+function sanitizeFileName(name) {
+  if (!name) {
+    return 'gorsel';
+  }
+
+  return (
+    name
+      .normalize('NFKD')
+      .replace(/[^\w.-]+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 60) || 'gorsel'
+  );
+}
+
+function buildStoredImageName(meId, index, originalName) {
+  const safeId = (meId || 'ME').replace(/[^A-Z0-9-]/gi, '').toUpperCase();
+  const safeIndex = String(index).padStart(3, '0');
+  const safeName = sanitizeFileName(originalName);
+  return `${safeId}_${safeIndex}_${safeName}`;
 }
 
 function readFileAsDataUrl(file) {
@@ -373,7 +658,10 @@ function readFileAsDataUrl(file) {
 }
 
 function handleImageUpload(event) {
-  if (!currentEntryKey || !currentEntryState) {
+  if (!currentEntryKey || !currentEntryState || !isEditing) {
+    if (imageInput) {
+      imageInput.value = '';
+    }
     return;
   }
 
@@ -382,14 +670,17 @@ function handleImageUpload(event) {
     return;
   }
 
-  const additions = [];
   const targetKey = currentEntryKey;
   const targetState = currentEntryState;
+
+  if (!targetState.meId) {
+    targetState.meId = ensureEntryMeId(targetKey) || assignNextMeId();
+  }
 
   Promise.all(
     files.map((file) =>
       readFileAsDataUrl(file)
-        .then((dataUrl) => ({ id: createImageId(), name: file.name, dataUrl }))
+        .then((dataUrl) => ({ file, dataUrl }))
         .catch((error) => {
           console.warn('Bir görsel okunamadı:', error);
           return null;
@@ -397,10 +688,23 @@ function handleImageUpload(event) {
     ),
   )
     .then((results) => {
+      const additions = [];
+      let nextIndex = targetState.images.length + 1;
+
       results.forEach((result) => {
-        if (result) {
-          additions.push(result);
+        if (!result || !result.file) {
+          return;
         }
+
+        const storedName = buildStoredImageName(targetState.meId, nextIndex, result.file.name);
+        additions.push({
+          id: createImageId(),
+          name: result.file.name,
+          dataUrl: result.dataUrl,
+          caption: '',
+          storedName,
+        });
+        nextIndex += 1;
       });
 
       if (additions.length === 0) {
@@ -410,10 +714,6 @@ function handleImageUpload(event) {
         return;
       }
 
-      if (!targetState.meId) {
-        targetState.meId = generateMeId();
-      }
-
       targetState.images = [...targetState.images, ...additions];
       entriesStore[targetKey] = {
         meId: targetState.meId,
@@ -421,6 +721,8 @@ function handleImageUpload(event) {
         images: targetState.images,
       };
       saveEntriesToStorage(entriesStore);
+      meIdAssignments[targetKey] = targetState.meId;
+      saveMeIdAssignments(meIdAssignments);
 
       if (currentEntryKey === targetKey) {
         currentEntryState = targetState;
@@ -455,13 +757,59 @@ function removeImageFromEntry(imageId) {
     return;
   }
 
+  if (!isEditing) {
+    if (currentEntryKey) {
+      updatePanelStatus('Görselleri düzenlemek için önce "Düzenle" düğmesine basın.');
+      scheduleStatusReset(currentEntryKey);
+    }
+    return;
+  }
+
   currentEntryState.images = currentEntryState.images.filter((image) => image.id !== imageId);
   persistCurrentEntry();
   renderImageGallery(currentEntryState.images);
+
+  if (currentEntryKey) {
+    updatePanelStatus('Görsel kaldırıldı.');
+    scheduleStatusReset(currentEntryKey);
+  }
+}
+
+function updateImageCaption(imageId) {
+  if (!currentEntryState || !imageId) {
+    return;
+  }
+
+  if (!isEditing) {
+    if (currentEntryKey) {
+      updatePanelStatus('Görsel altyazısı için önce "Düzenle" düğmesine basın.');
+      scheduleStatusReset(currentEntryKey);
+    }
+    return;
+  }
+
+  const targetImage = currentEntryState.images.find((image) => image.id === imageId);
+  if (!targetImage) {
+    return;
+  }
+
+  const newCaption = window.prompt('Görsel altyazısını girin:', targetImage.caption || '');
+  if (newCaption === null) {
+    return;
+  }
+
+  targetImage.caption = newCaption.trim();
+  persistCurrentEntry();
+  renderImageGallery(currentEntryState.images);
+
+  if (currentEntryKey) {
+    updatePanelStatus('Görsel altyazısı kaydedildi.');
+    scheduleStatusReset(currentEntryKey);
+  }
 }
 
 function handleToolbarButtonClick(event) {
-  if (!currentEntryKey || !currentEntryState || !editorSurface) {
+  if (!currentEntryKey || !currentEntryState || !editorSurface || !isEditing) {
     return;
   }
 
@@ -486,7 +834,7 @@ function handleToolbarButtonClick(event) {
 }
 
 function openEntryPanel(entry) {
-  if (!panelLabelNode || !panelInstanceNode || !editorSurface) {
+  if (!panelLabelNode || !panelInstanceNode || !editorSurface || !editorDisplay) {
     return;
   }
 
@@ -497,7 +845,21 @@ function openEntryPanel(entry) {
   }
   currentEntryKey = entry.id;
   currentEntryState = cloneEntryState(currentEntryKey);
+  if (!currentEntryState.meId) {
+    currentEntryState.meId = entry.meId || ensureEntryMeId(currentEntryKey);
+  }
+  if (currentEntryState.meId) {
+    meIdAssignments[currentEntryKey] = currentEntryState.meId;
+    saveMeIdAssignments(meIdAssignments);
+    entriesStore[currentEntryKey] = {
+      meId: currentEntryState.meId,
+      content: currentEntryState.content,
+      images: currentEntryState.images,
+    };
+    saveEntriesToStorage(entriesStore);
+  }
   setEditorEnabled(true);
+  setEditingMode(false);
 
   if (panelMeIdNode) {
     panelMeIdNode.textContent = currentEntryState.meId || 'Henüz oluşturulmadı';
@@ -505,14 +867,14 @@ function openEntryPanel(entry) {
 
   const content = currentEntryState.content || '';
   editorSurface.innerHTML = content;
+  renderEntryDisplay(content);
   renderImageGallery(currentEntryState.images);
   scheduleStatusReset(null);
   updatePanelStatus(DEFAULT_SELECTION_MESSAGE);
-  editorSurface.focus();
 }
 
 function handleSaveEntry() {
-  if (!currentEntryKey || !currentEntryState || !editorSurface) {
+  if (!currentEntryKey || !currentEntryState || !editorSurface || !isEditing) {
     return;
   }
 
@@ -521,7 +883,7 @@ function handleSaveEntry() {
   currentEntryState.content = sanitizedContent;
 
   if (!currentEntryState.meId) {
-    currentEntryState.meId = generateMeId();
+    currentEntryState.meId = ensureEntryMeId(currentEntryKey) || assignNextMeId();
   }
 
   persistCurrentEntry();
@@ -530,7 +892,21 @@ function handleSaveEntry() {
     panelMeIdNode.textContent = currentEntryState.meId;
   }
 
+  renderEntryDisplay(currentEntryState.content);
+  setEditingMode(false);
+
   updatePanelStatus(`Değişiklikler kaydedildi. ME ID: ${currentEntryState.meId}`);
+  scheduleStatusReset(currentEntryKey);
+}
+
+function handleEditEntry() {
+  if (!currentEntryKey || !currentEntryState || !editorSurface || isEditing) {
+    return;
+  }
+
+  editorSurface.innerHTML = currentEntryState.content || '';
+  setEditingMode(true);
+  updatePanelStatus('Düzenleme moduna geçtiniz.');
   scheduleStatusReset(currentEntryKey);
 }
 
@@ -544,6 +920,10 @@ if (saveButton) {
   saveButton.addEventListener('click', handleSaveEntry);
 }
 
+if (editButton) {
+  editButton.addEventListener('click', handleEditEntry);
+}
+
 if (imageInput) {
   imageInput.addEventListener('change', handleImageUpload);
 }
@@ -552,6 +932,12 @@ if (galleryList) {
   galleryList.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    if (target.classList.contains('gallery__caption-button')) {
+      const imageId = target.dataset.imageId;
+      updateImageCaption(imageId);
       return;
     }
 
@@ -649,10 +1035,12 @@ function addMarker(entry) {
   const escapedLabel = escapeHtml(entry.label);
   const escapedInstanceLabel = escapeHtml(entry.instanceLabel);
   const escapedDate = escapeHtml(entry.inceptionDisplay || DATE_UNKNOWN_TEXT);
+  const escapedMeId = escapeHtml(entry.meId || 'Henüz oluşturulmadı');
 
   const popupContent = `
     <div class="popup-content">
       <strong>${escapedLabel}</strong>
+      <span>ME ID: ${escapedMeId}</span>
       <span>${escapedInstanceLabel}</span>
       <span>${escapedDate}</span>
       <button type="button" class="popup-content__button js-open-entry">Envanteri düzenle</button>
@@ -731,7 +1119,12 @@ LIMIT 1000`;
       return;
     }
 
-    entries.forEach((entry) => addMarker(entry));
+    entries.sort((a, b) => a.label.localeCompare(b.label, 'tr', { sensitivity: 'base' }));
+
+    entries.forEach((entry) => {
+      entry.meId = ensureEntryMeId(entry.id);
+      addMarker(entry);
+    });
     updatePanelStatus('Haritadan bir hazire seçin.');
     updateCemeteryCount(entries.length);
   } catch (error) {
