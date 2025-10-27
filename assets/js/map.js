@@ -31,10 +31,14 @@ const imageInput = document.getElementById('image-input');
 const galleryList = document.getElementById('image-gallery');
 const galleryEmptyMessage = document.getElementById('gallery-empty');
 const toolbarButtons = Array.from(document.querySelectorAll('.toolbar-button'));
+const panelCountNode = document.getElementById('cemetery-count');
 
 const STORAGE_KEY = 'me-inventory-entries';
 const COUNTER_KEY = 'me-inventory-counter';
 const DEFAULT_SELECTION_MESSAGE = 'Envanter notlarını düzenleyebilirsiniz.';
+const COUNT_LOADING_TEXT = 'Toplam mezarlık: yükleniyor…';
+const COUNT_ERROR_TEXT = 'Toplam mezarlık: yüklenemedi.';
+const WIKIDATA_ENDPOINT = 'https://query.wikidata.org/sparql';
 
 let entriesStore = loadEntriesFromStorage();
 let currentEntryKey = null;
@@ -50,10 +54,6 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
-}
-
-function formatTagValue(value) {
-  return value.replace(/_/g, ' ');
 }
 
 function updatePanelStatus(message) {
@@ -92,6 +92,24 @@ function scheduleStatusReset(entryKey) {
     }
     statusResetHandle = null;
   }, 4000);
+}
+
+function updateCemeteryCount(count) {
+  if (!panelCountNode) {
+    return;
+  }
+
+  if (count === null) {
+    panelCountNode.textContent = COUNT_LOADING_TEXT;
+    return;
+  }
+
+  if (typeof count === 'number' && Number.isFinite(count)) {
+    panelCountNode.textContent = `Toplam mezarlık: ${count.toLocaleString('tr-TR')}`;
+    return;
+  }
+
+  panelCountNode.textContent = COUNT_ERROR_TEXT;
 }
 
 function loadEntriesFromStorage() {
@@ -530,70 +548,62 @@ if (galleryList) {
   });
 }
 
-function buildInstanceLabel(tags) {
-  if (!tags) {
-    return 'Mezarlık';
+function parseWktCoordinates(value) {
+  if (!value || typeof value !== 'string') {
+    return null;
   }
 
-  const values = [
-    tags['cemetery:type'],
-    tags.religion,
-    tags.amenity,
-    tags.landuse,
-    tags.denomination,
-  ]
-    .filter((value) =>
-      Boolean(
-        value && value !== 'cemetery' && value !== 'grave_yard' && value !== 'yes',
-      ),
-    )
-    .map(formatTagValue);
-
-  if (values.length === 0) {
-    return 'Mezarlık';
+  const match = value.match(/Point\(([-\d.]+)\s+([\-\d.]+)\)/);
+  if (!match) {
+    return null;
   }
 
-  const uniqueValues = [...new Set(values)];
-  return uniqueValues.join(' • ');
+  const longitude = Number.parseFloat(match[1]);
+  const latitude = Number.parseFloat(match[2]);
+
+  if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+    return null;
+  }
+
+  return [latitude, longitude];
 }
 
-function createEntryFromElement(element) {
-  const { tags } = element;
-  let coordinates = null;
-
-  if (element.type === 'node' && typeof element.lat === 'number' && typeof element.lon === 'number') {
-    coordinates = [element.lat, element.lon];
-  } else if (element.center && typeof element.center.lat === 'number' && typeof element.center.lon === 'number') {
-    coordinates = [element.center.lat, element.center.lon];
+function createEntryFromBinding(binding) {
+  if (!binding) {
+    return null;
   }
 
+  const coordinates = parseWktCoordinates(binding.coord?.value);
   if (!coordinates) {
     return null;
   }
 
-  const [lat, lon] = coordinates;
-  if (
-    lat < TURKIYE_BOUNDS[0][0] ||
-    lat > TURKIYE_BOUNDS[1][0] ||
-    lon < TURKIYE_BOUNDS[0][1] ||
-    lon > TURKIYE_BOUNDS[1][1]
-  ) {
+  const itemValue = binding.item?.value;
+  if (!itemValue) {
     return null;
   }
 
-  const label = tags?.name ? tags.name : 'İsimsiz mezarlık';
-  const instanceLabel = buildInstanceLabel(tags);
+  const itemMatch = itemValue.match(/Q\d+$/);
+  const itemId = itemMatch ? itemMatch[0] : itemValue;
+  const label = binding.itemLabel?.value?.trim() || 'İsimsiz mezarlık';
 
   return {
-    id: `${element.type}/${element.id}`,
+    id: itemId,
     label,
-    instanceLabel,
+    instanceLabel: 'Mezarlık',
     coordinates,
   };
 }
 
 function addMarker(entry) {
-  const marker = L.marker(entry.coordinates);
+  const marker = L.circleMarker(entry.coordinates, {
+    radius: 7,
+    fillColor: '#2563eb',
+    color: '#0f172a',
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.9,
+  });
 
   const escapedLabel = escapeHtml(entry.label);
   const escapedInstanceLabel = escapeHtml(entry.instanceLabel);
@@ -638,47 +648,53 @@ function addMarker(entry) {
 
 async function loadCemeteries() {
   updatePanelStatus("Türkiye'deki mezarlıklar yükleniyor…");
+  updateCemeteryCount(null);
 
-  const overpassEndpoint = 'https://overpass-api.de/api/interpreter';
-  const bbox = `${TURKIYE_BOUNDS[0][0]},${TURKIYE_BOUNDS[0][1]},${TURKIYE_BOUNDS[1][0]},${TURKIYE_BOUNDS[1][1]}`;
-  const query = `
-    [out:json][timeout:40];
-    (
-      node["landuse"="cemetery"](${bbox});
-      way["landuse"="cemetery"](${bbox});
-      relation["landuse"="cemetery"](${bbox});
-      node["amenity"="grave_yard"](${bbox});
-      way["amenity"="grave_yard"](${bbox});
-      relation["amenity"="grave_yard"](${bbox});
-    );
-    out center 500;
-  `;
+  const sparqlQuery = `# Türkiye sınırları içinde koordinatlı mezarlıklar (tümülüsler hariç)
+SELECT ?item ?itemLabel ?coord WHERE {
+  ?item wdt:P31/wdt:P279* wd:Q39614.
+  ?item wdt:P17 wd:Q43.
+  ?item wdt:P625 ?coord.
+  FILTER NOT EXISTS { ?item wdt:P31/wdt:P279* wd:Q34023. }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "tr,en". }
+}
+ORDER BY ?itemLabel
+LIMIT 1000`;
 
-  const url = `${overpassEndpoint}?data=${encodeURIComponent(query)}`;
+  const url = `${WIKIDATA_ENDPOINT}?format=json&query=${encodeURIComponent(sparqlQuery)}`;
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/sparql-results+json',
+      },
+    });
 
     if (!response.ok) {
-      throw new Error(`Overpass API ${response.status}`);
+      throw new Error(`Wikidata Query Service ${response.status}`);
     }
 
     const data = await response.json();
-    const elements = Array.isArray(data.elements) ? data.elements : [];
-    const entries = elements
-      .map((element) => createEntryFromElement(element))
+    const bindings = Array.isArray(data?.results?.bindings)
+      ? data.results.bindings
+      : [];
+    const entries = bindings
+      .map((binding) => createEntryFromBinding(binding))
       .filter((entry) => entry !== null);
 
     if (entries.length === 0) {
       updatePanelStatus('Türkiye sınırları içinde mezarlık bulunamadı.');
+      updateCemeteryCount(0);
       return;
     }
 
     entries.forEach((entry) => addMarker(entry));
     updatePanelStatus('Haritadan bir mezarlık seçin.');
+    updateCemeteryCount(entries.length);
   } catch (error) {
     console.error('Mezarlıklar yüklenirken bir hata oluştu:', error);
     updatePanelStatus('Mezarlıklar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+    updateCemeteryCount(undefined);
   }
 }
 

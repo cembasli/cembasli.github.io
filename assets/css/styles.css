@@ -214,6 +214,19 @@ dd {
   background-color: rgba(185, 28, 28, 0.9);
 }
 
+.panel-footer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.panel-count {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
 .popup-content {
   display: flex;
   flex-direction: column;
