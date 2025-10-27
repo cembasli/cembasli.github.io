@@ -19,12 +19,61 @@
         <p class="panel-status" id="panel-status">
           Türkiye'deki mezarlıklar yükleniyor…
         </p>
-        <dl>
+        <dl class="entry-details">
           <dt>Adı</dt>
           <dd class="entry-name" id="panel-label">Haritadan bir mezarlık seçin</dd>
           <dt>Türü</dt>
           <dd class="entry-instance" id="panel-instance">&mdash;</dd>
+          <dt>ME ID</dt>
+          <dd class="entry-id" id="panel-me-id">Henüz oluşturulmadı</dd>
         </dl>
+        <section class="editor" id="entry-editor-container" aria-disabled="true">
+          <header class="editor__header">
+            <h3 class="editor__title">Envanter notları</h3>
+            <p class="editor__hint">
+              Haritadan bir mezarlık seçtikten sonra açıklama ekleyebilir, düzenleyebilir ve görseller
+              yükleyebilirsiniz.
+            </p>
+          </header>
+          <div class="editor__toolbar" role="toolbar" aria-label="Metin biçimlendirme">
+            <button type="button" class="toolbar-button" data-command="bold" title="Kalın (Ctrl+B)">
+              B
+            </button>
+            <button type="button" class="toolbar-button" data-command="italic" title="İtalik (Ctrl+I)">
+              I
+            </button>
+            <button type="button" class="toolbar-button" data-command="insertUnorderedList" title="Madde işaretli liste">
+              • Liste
+            </button>
+            <button type="button" class="toolbar-button" data-command="insertOrderedList" title="Numaralı liste">
+              1. Liste
+            </button>
+            <button type="button" class="toolbar-button" data-command="createLink" title="Bağlantı ekle">
+              🔗
+            </button>
+            <label class="toolbar-upload" title="Görsel ekle">
+              📷
+              <input type="file" id="image-input" accept="image/*" multiple />
+            </label>
+          </div>
+          <div
+            id="entry-editor"
+            class="editor__surface"
+            contenteditable="true"
+            role="textbox"
+            aria-multiline="true"
+            aria-label="Mezarlık envanteri açıklaması"
+            spellcheck="true"
+          ></div>
+          <div class="editor__actions">
+            <button type="button" class="save-button" id="save-entry" disabled>Kaydet</button>
+          </div>
+          <section class="gallery" aria-live="polite">
+            <h4 class="gallery__title">Görseller</h4>
+            <p class="gallery__empty" id="gallery-empty">Henüz görsel eklenmedi.</p>
+            <ul class="gallery__list" id="image-gallery"></ul>
+          </section>
+        </section>
       </aside>
     </div>
     <script
