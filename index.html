@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>City Map</title>
+    <title>Türkiye Mezarlık Haritası</title>
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -13,13 +13,16 @@
   </head>
   <body>
     <div class="layout">
-      <div id="map" class="map"></div>
+      <div id="map" class="map" aria-label="Türkiye haritası"></div>
       <aside class="panel" id="entry-panel">
-        <h2 class="panel-title">Entry details</h2>
+        <h2 class="panel-title">Mezarlık detayları</h2>
+        <p class="panel-status" id="panel-status">
+          Türkiye'deki mezarlıklar yükleniyor…
+        </p>
         <dl>
-          <dt>Label</dt>
-          <dd class="entry-name" id="panel-label">Select a marker</dd>
-          <dt>Instance</dt>
+          <dt>Adı</dt>
+          <dd class="entry-name" id="panel-label">Haritadan bir mezarlık seçin</dd>
+          <dt>Türü</dt>
           <dd class="entry-instance" id="panel-instance">&mdash;</dd>
         </dl>
       </aside>
