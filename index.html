@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Türkiye Mezarlıkları Haritası</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" integrity="sha512-sA+e2sU6UjeRGna43EIBgzHuLlHotE5T7V6czS4fFqqTZPIYOvToNiOfzmiEJeZVr3ePwFsypIk7wLrjCmq80Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-67Y2J3VKBJ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);} 
+      gtag('js', new Date());
+      gtag('config', 'G-67Y2J3VKBJ');
+    </script>
+    <style>
+        :root {
+            color-scheme: light;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #073763 0%, #021526 100%);
+            color: #0f172a;
+        }
+        a {
+            color: inherit;
+        }
+        header {
+            padding: 40px 20px 20px;
+            text-align: center;
+            color: #e2e8f0;
+        }
+        header h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 2.8vw, 2.8rem);
+            text-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        header p {
+            margin: 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px 40px;
+        }
+        .glass-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(15,23,42,0.25);
+            margin-bottom: 20px;
+            padding: clamp(18px, 2vw, 28px);
+            backdrop-filter: blur(12px);
+        }
+        .controls {
+            display: grid;
+            gap: 20px;
+        }
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            color: #1e293b;
+        }
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #cbd5f5;
+            font-size: 15px;
+            background: #f8fafc;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
+        }
+        button.primary {
+            padding: 14px 22px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        button.primary:disabled {
+            opacity: 0.6;
+            cursor: progress;
+        }
+        button.primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 30px rgba(37,99,235,0.25);
+        }
+        #map {
+            height: min(70vh, 720px);
+            width: 100%;
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(2,21,38,0.4);
+        }
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 50px;
+            background: rgba(148, 163, 184, 0.15);
+        }
+        .legend-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 18px;
+        }
+        .stat {
+            padding: 18px;
+            border-radius: 16px;
+            background: linear-gradient(145deg, rgba(37,99,235,0.12), rgba(14,165,233,0.12));
+        }
+        .stat-title {
+            font-size: 0.85rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: #1d4ed8;
+            margin-bottom: 6px;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        #messages > div {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+        .message-error {
+            background: rgba(248,113,113,0.16);
+            color: #b91c1c;
+        }
+        .message-success {
+            background: rgba(52,211,153,0.16);
+            color: #047857;
+        }
+        .message-info {
+            background: rgba(129,140,248,0.16);
+            color: #4338ca;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2563eb;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .side-panel {
+            position: fixed;
+            top: 0;
+            right: -440px;
+            width: min(400px, 92vw);
+            height: 100vh;
+            background: rgba(15,23,42,0.98);
+            color: #e2e8f0;
+            box-shadow: -20px 0 50px rgba(2,6,23,0.75);
+            padding: 26px 24px 80px;
+            overflow-y: auto;
+            transition: right 0.35s ease;
+            z-index: 1200;
+        }
+        .side-panel.active {
+            right: 0;
+        }
+        .side-panel header {
+            text-align: left;
+            padding: 0 0 16px;
+            color: inherit;
+        }
+        .panel-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: none;
+            border: none;
+            color: #cbd5f5;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .panel-subtitle {
+            color: #94a3b8;
+            margin: 6px 0 18px;
+        }
+        .entry-card {
+            background: rgba(15,23,42,0.75);
+            border: 1px solid rgba(148,163,184,0.18);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+        .entry-card h4 {
+            margin: 0 0 8px;
+            color: #38bdf8;
+        }
+        .entry-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #cbd5f5;
+            margin-bottom: 10px;
+        }
+        .entry-meta span {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(148,163,184,0.18);
+        }
+        .entry-card img {
+            width: 100%;
+            border-radius: 12px;
+            margin: 10px 0;
+            max-height: 220px;
+            object-fit: cover;
+        }
+        .entry-card p {
+            margin: 0;
+            line-height: 1.55;
+            color: #e2e8f0;
+        }
+        .entry-form {
+            background: rgba(14,165,233,0.12);
+            border-radius: 16px;
+            padding: 18px;
+            margin-top: 24px;
+        }
+        .entry-form h4 {
+            margin: 0 0 12px;
+            color: #38bdf8;
+        }
+        .entry-form label {
+            display: block;
+            font-weight: 600;
+            margin: 12px 0 6px;
+            color: #e0f2fe;
+        }
+        .entry-form input,
+        .entry-form textarea,
+        .entry-form select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(148,163,184,0.4);
+            background: rgba(15,23,42,0.6);
+            color: #f8fafc;
+        }
+        .entry-form textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+        .entry-form button {
+            margin-top: 14px;
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #38bdf8, #2563eb);
+            color: #0f172a;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+            border: 1px dashed rgba(148,163,184,0.3);
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+        @media (max-width: 768px) {
+            header {
+                padding-top: 28px;
+            }
+            .controls {
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🕯️ Türkiye Mezarlıkları Haritası</h1>
+        <p>Wikidata üzerinde "cemetery" ve "graveyard" olarak işaretlenmiş alanları keşfedin, bilgiler ekleyin.</p>
+    </header>
+    <main>
+        <section class="glass-panel controls">
+            <div class="selection-grid">
+                <div class="form-group">
+                    <label for="provinceSelect">İl seçiniz</label>
+                    <select id="provinceSelect" onchange="handleProvinceChange()">
+                        <option value="">İl seçiniz…</option>
+                        <option value="Q40549">Adana</option>
+                        <option value="Q43924">Adıyaman</option>
+                        <option value="Q45220">Afyonkarahisar</option>
+                        <option value="Q80051">Ağrı</option>
+                        <option value="Q83073">Aksaray</option>
+                        <option value="Q80036">Amasya</option>
+                        <option value="Q2297724">Ankara</option>
+                        <option value="Q40249">Antalya</option>
+                        <option value="Q79840">Ardahan</option>
+                        <option value="Q43745">Artvin</option>
+                        <option value="Q79846">Aydın</option>
+                        <option value="Q47117">Balıkesir</option>
+                        <option value="Q83342">Bartın</option>
+                        <option value="Q80370">Batman</option>
+                        <option value="Q483063">Bayburt</option>
+                        <option value="Q46763">Bilecik</option>
+                        <option value="Q79760">Bingöl</option>
+                        <option value="Q83239">Bitlis</option>
+                        <option value="Q82089">Bolu</option>
+                        <option value="Q80088">Burdur</option>
+                        <option value="Q43690">Bursa</option>
+                        <option value="Q47813">Çanakkale</option>
+                        <option value="Q272662">Çankırı</option>
+                        <option value="Q272947">Çorum</option>
+                        <option value="Q82096">Denizli</option>
+                        <option value="Q83081">Diyarbakır</option>
+                        <option value="Q432391">Düzce</option>
+                        <option value="Q83102">Edirne</option>
+                        <option value="Q483091">Elazığ</option>
+                        <option value="Q483173">Erzincan</option>
+                        <option value="Q376797">Erzurum</option>
+                        <option value="Q483053">Eskişehir</option>
+                        <option value="Q483154">Gaziantep</option>
+                        <option value="Q482779">Giresun</option>
+                        <option value="Q482788">Gümüşhane</option>
+                        <option value="Q93209">Hakkari</option>
+                        <option value="Q83274">Hatay</option>
+                        <option value="Q125506">Iğdır</option>
+                        <option value="Q268043">Isparta</option>
+                        <option value="Q534799">İstanbul</option>
+                        <option value="Q344490">İzmir</option>
+                        <option value="Q482834">Kahramanmaraş</option>
+                        <option value="Q483168">Karabük</option>
+                        <option value="Q482975">Karaman</option>
+                        <option value="Q83077">Kars</option>
+                        <option value="Q483191">Kastamonu</option>
+                        <option value="Q483472">Kayseri</option>
+                        <option value="Q128978">Kilis</option>
+                        <option value="Q484392">Kırıkkale</option>
+                        <option value="Q131597">Kırklareli</option>
+                        <option value="Q134187">Kırşehir</option>
+                        <option value="Q83965">Kocaeli</option>
+                        <option value="Q81551">Konya</option>
+                        <option value="Q126874">Kütahya</option>
+                        <option value="Q131384">Malatya</option>
+                        <option value="Q130553">Manisa</option>
+                        <option value="Q131293">Mardin</option>
+                        <option value="Q132637">Mersin</option>
+                        <option value="Q123934">Muğla</option>
+                        <option value="Q131387">Muş</option>
+                        <option value="Q430693">Nevşehir</option>
+                        <option value="Q155219">Niğde</option>
+                        <option value="Q483180">Ordu</option>
+                        <option value="Q281206">Osmaniye</option>
+                        <option value="Q483481">Rize</option>
+                        <option value="Q83069">Sakarya</option>
+                        <option value="Q483040">Samsun</option>
+                        <option value="Q388469">Şanlıurfa</option>
+                        <option value="Q482825">Siirt</option>
+                        <option value="Q134413">Sinop</option>
+                        <option value="Q483100">Sivas</option>
+                        <option value="Q647378">Şırnak</option>
+                        <option value="Q129387">Tekirdağ</option>
+                        <option value="Q483195">Tokat</option>
+                        <option value="Q388995">Trabzon</option>
+                        <option value="Q620742">Tunceli</option>
+                        <option value="Q483078">Uşak</option>
+                        <option value="Q80550">Van</option>
+                        <option value="Q483083">Yalova</option>
+                        <option value="Q75445">Yozgat</option>
+                        <option value="Q219956">Zonguldak</option>
+                    </select>
+                </div>
+                <div class="form-group" id="districtGroup" style="display:none;">
+                    <label for="districtSelect">İlçe (İsteğe bağlı)</label>
+                    <select id="districtSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button class="primary" id="loadBtn" onclick="loadCemeteries()">📍 Haritada Göster</button>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-swatch" style="background:#2563eb;"></span>
+                    <span>Wikidata mezarlığı</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-swatch" style="background:#facc15;"></span>
+                    <span>Graveyard (tarihi/ küçük alan)</span>
+                </div>
+            </div>
+            <div id="messages"></div>
+            <div id="loading" class="loading" style="display:none;">
+                <span class="spinner">⏳</span>
+                <span>Wikidata sorgusu çalıştırılıyor…</span>
+            </div>
+        </section>
+        <section class="glass-panel stats" id="stats" style="display:none;">
+            <div class="stat">
+                <div class="stat-title">Toplam öğe</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-title">Cemetery (Q39614)</div>
+                <div class="stat-value" id="statCemetery">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-title">Graveyard (Q1107656)</div>
+                <div class="stat-value" id="statGraveyard">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-title">Sorgu süresi (sn)</div>
+                <div class="stat-value" id="statTime">0</div>
+            </div>
+        </section>
+        <section class="glass-panel">
+            <div id="map"></div>
+        </section>
+    </main>
+
+    <aside class="side-panel" id="entryPanel">
+        <button class="panel-close" type="button" onclick="togglePanel(false)">✖</button>
+        <header>
+            <h2 id="panelTitle">Mezarlık Bilgisi</h2>
+            <p class="panel-subtitle" id="panelSubtitle">Seçilen mezarlığa ait bilgileri görüntüleyin veya ekleyin.</p>
+        </header>
+        <div id="entryList" class="entries"></div>
+        <div class="entry-form">
+            <h4>Yeni entry ekleyin</h4>
+            <label for="entryType">Tür</label>
+            <input type="text" id="entryType" placeholder="Örn. Osmanlı, Rum Ortodoks" />
+            <label for="entryDate">Tarih</label>
+            <input type="text" id="entryDate" placeholder="Örn. 19. yy" />
+            <label for="entryCulture">Kültür</label>
+            <input type="text" id="entryCulture" placeholder="Örn. Müslüman, Ermeni" />
+            <label for="entryImage">Görsel bağlantısı</label>
+            <input type="url" id="entryImage" placeholder="https://..." />
+            <label for="entryText">Açıklama / kitabe notu</label>
+            <textarea id="entryText" placeholder="Kısa bilgi veya kitabe metni"></textarea>
+            <button type="button" onclick="saveEntry()">Kaydet</button>
+        </div>
+    </aside>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" integrity="sha512-VzJZnN2JgsFnmpt5TR1+t0NenE2no0RvrRZtGJPD7W82dManIeZDV4SSQdlqzTeWY5Avzk1lIoasJl0f5pmQmA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        const istanbulDistricts = [
+            {qid: "Q1020668", name: "Adalar"},
+            {qid: "Q691764", name: "Arnavutköy"},
+            {qid: "Q753882", name: "Ataşehir"},
+            {qid: "Q340148", name: "Avcılar"},
+            {qid: "Q746516", name: "Bağcılar"},
+            {qid: "Q788634", name: "Bahçelievler"},
+            {qid: "Q752528", name: "Bakırköy"},
+            {qid: "Q791607", name: "Başakşehir"},
+            {qid: "Q791567", name: "Bayrampaşa"},
+            {qid: "Q459495", name: "Beşiktaş"},
+            {qid: "Q794351", name: "Beykoz"},
+            {qid: "Q794356", name: "Beylikdüzü"},
+            {qid: "Q217411", name: "Beyoğlu"},
+            {qid: "Q840258", name: "Büyükçekmece"},
+            {qid: "Q272681", name: "Çatalca"},
+            {qid: "Q122320", name: "Çekmeköy"},
+            {qid: "Q378714", name: "Esenler"},
+            {qid: "Q268983", name: "Esenyurt"},
+            {qid: "Q673073", name: "Eyüpsultan"},
+            {qid: "Q732923", name: "Fatih"},
+            {qid: "Q570826", name: "Gaziosmanpaşa"},
+            {qid: "Q932166", name: "Güngören"},
+            {qid: "Q932886", name: "Kadıköy"},
+            {qid: "Q284489", name: "Kağıthane"},
+            {qid: "Q639014", name: "Kartal"},
+            {qid: "Q639240", name: "Küçükçekmece"},
+            {qid: "Q739547", name: "Maltepe"},
+            {qid: "Q857056", name: "Pendik"},
+            {qid: "Q253182", name: "Sancaktepe"},
+            {qid: "Q857107", name: "Sarıyer"},
+            {qid: "Q732028", name: "Silivri"},
+            {qid: "Q673890", name: "Sultanbeyli"},
+            {qid: "Q268747", name: "Sultangazi"},
+            {qid: "Q241631", name: "Şile"},
+            {qid: "Q390637", name: "Şişli"},
+            {qid: "Q938548", name: "Tuzla"},
+            {qid: "Q334924", name: "Ümraniye"},
+            {qid: "Q326339", name: "Üsküdar"},
+            {qid: "Q197095", name: "Zeytinburnu"}
+        ];
+
+        let map = L.map('map').setView([39.0, 35.0], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        let markersLayer = L.layerGroup().addTo(map);
+
+        const entryPanel = document.getElementById('entryPanel');
+        let currentFeature = null;
+        let entryData = loadStoredEntries();
+
+        function handleProvinceChange() {
+            const provinceValue = document.getElementById('provinceSelect').value;
+            const districtGroup = document.getElementById('districtGroup');
+            const districtSelect = document.getElementById('districtSelect');
+            districtSelect.innerHTML = '';
+            if (provinceValue === 'Q534799') {
+                districtGroup.style.display = 'block';
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Tüm ilçeler';
+                districtSelect.appendChild(defaultOption);
+                istanbulDistricts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.qid;
+                    opt.textContent = d.name;
+                    districtSelect.appendChild(opt);
+                });
+            } else {
+                districtGroup.style.display = 'none';
+            }
+        }
+
+        function showMessage(text, type = 'info') {
+            const container = document.getElementById('messages');
+            const el = document.createElement('div');
+            el.textContent = text;
+            el.className = type === 'error' ? 'message-error' : type === 'success' ? 'message-success' : 'message-info';
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 5000);
+        }
+
+        async function loadCemeteries() {
+            const province = document.getElementById('provinceSelect').value;
+            const district = document.getElementById('districtSelect').value;
+            if (!province) {
+                showMessage('Lütfen bir il seçiniz.', 'error');
+                return;
+            }
+
+            const loadBtn = document.getElementById('loadBtn');
+            const loading = document.getElementById('loading');
+            loadBtn.disabled = true;
+            loading.style.display = 'flex';
+            markersLayer.clearLayers();
+            togglePanel(false);
+
+            const locationPath = district ? `wdt:P131*/wdt:P131* wd:${district};` : `wdt:P131*/wdt:P131* wd:${province};`;
+            const query = `SELECT DISTINCT ?place ?placeLabel ?coord ?instanceLabel WHERE {
+  VALUES ?instance { wd:Q39614 wd:Q1107656 }
+  ?place wdt:P31 ?instance;
+         ${locationPath}
+         wdt:P625 ?coord.
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],tr,en". }
+}`;
+            const start = performance.now();
+            try {
+                const url = 'https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(query);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const json = await response.json();
+                const results = json.results.bindings || [];
+                const elapsed = ((performance.now() - start) / 1000).toFixed(2);
+                updateStats(results, elapsed);
+                renderMarkers(results);
+                if (results.length > 0) {
+                    const bounds = L.latLngBounds(results.map(r => {
+                        const match = r.coord.value.match(/Point\\(([^ ]+) ([^ ]+)\\)/);
+                        return [parseFloat(match[2]), parseFloat(match[1])];
+                    }));
+                    map.fitBounds(bounds.pad(0.15));
+                }
+                showMessage(`${results.length} mezarlık bulundu.`, 'success');
+            } catch (error) {
+                console.error(error);
+                showMessage('Sorgu sırasında hata oluştu: ' + error.message, 'error');
+            } finally {
+                loadBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderMarkers(results) {
+            markersLayer.clearLayers();
+            results.forEach(result => {
+                if (!result.coord || !result.coord.value) return;
+                const match = result.coord.value.match(/Point\\(([^ ]+) ([^ ]+)\\)/);
+                if (!match) return;
+                const lng = parseFloat(match[1]);
+                const lat = parseFloat(match[2]);
+                const qid = result.place.value.split('/').pop();
+                const label = result.placeLabel ? result.placeLabel.value : 'İsimsiz mezarlık';
+                const instanceLabel = result.instanceLabel ? result.instanceLabel.value : '';
+
+                const isGraveyard = instanceLabel.toLowerCase().includes('graveyard');
+                const marker = L.circleMarker([lat, lng], {
+                    radius: 7,
+                    color: isGraveyard ? '#facc15' : '#1e40af',
+                    fillColor: isGraveyard ? '#facc15' : '#2563eb',
+                    fillOpacity: 0.9,
+                    weight: 2
+                }).addTo(markersLayer);
+
+                const popupHtml = `<div style="min-width:200px;">
+                    <h3 style="margin:0 0 8px;color:#1e3a8a;font-size:1rem;">${escapeHtml(label)}</h3>
+                    <p style="margin:0 0 6px;color:#334155;font-size:0.9rem;">Tip: ${escapeHtml(instanceLabel)}</p>
+                    <p style="margin:0 0 8px;font-size:0.9rem;">
+                        <a href="https://www.wikidata.org/wiki/${qid}" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:600;">Wikidata ${qid}</a>
+                    </p>
+                    <button style="padding:8px 12px;border:none;border-radius:10px;background:#2563eb;color:white;font-weight:600;cursor:pointer;" onclick="openEntryPanel('${qid}','${escapeHtml(label)}','${escapeHtml(instanceLabel)}')">Entryleri Aç</button>
+                </div>`;
+                marker.bindPopup(popupHtml);
+            });
+        }
+
+        function updateStats(results, elapsed) {
+            const total = results.length;
+            const cemetery = results.filter(r => r.instanceLabel && r.instanceLabel.value.includes('cemetery')).length;
+            const graveyard = results.filter(r => r.instanceLabel && r.instanceLabel.value.includes('graveyard')).length;
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statCemetery').textContent = cemetery;
+            document.getElementById('statGraveyard').textContent = graveyard;
+            document.getElementById('statTime').textContent = elapsed;
+            document.getElementById('stats').style.display = 'grid';
+        }
+
+        function openEntryPanel(qid, label, instanceLabel) {
+            currentFeature = qid;
+            document.getElementById('panelTitle').textContent = label;
+            document.getElementById('panelSubtitle').textContent = instanceLabel ? `${instanceLabel} · ${qid}` : qid;
+            renderEntryList();
+            togglePanel(true);
+        }
+
+        function togglePanel(show) {
+            entryPanel.classList.toggle('active', show);
+        }
+
+        function renderEntryList() {
+            const container = document.getElementById('entryList');
+            container.innerHTML = '';
+            const list = entryData[currentFeature] || [];
+            if (list.length === 0) {
+                container.innerHTML = '<div class="empty-state">Bu mezarlık için henüz entry eklenmedi.<br>İlk bilgiyi siz ekleyin!</div>';
+                return;
+            }
+            list.forEach((entry, index) => {
+                const card = document.createElement('article');
+                card.className = 'entry-card';
+                card.innerHTML = `
+                    <h4>${escapeHtml(entry.type || 'Tür belirtilmedi')}</h4>
+                    <div class="entry-meta">
+                        ${entry.date ? `<span>🗓️ ${escapeHtml(entry.date)}</span>` : ''}
+                        ${entry.culture ? `<span>🏛️ ${escapeHtml(entry.culture)}</span>` : ''}
+                    </div>
+                    ${entry.image ? `<img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.type || 'Entry görseli')}" loading="lazy" />` : ''}
+                    ${entry.text ? `<p>${escapeHtml(entry.text)}</p>` : ''}
+                    <button type="button" style="margin-top:12px;width:100%;padding:10px;border-radius:10px;border:none;background:#dc2626;color:#fff;font-weight:600;cursor:pointer;" onclick="deleteEntry(${index})">Entryyi Sil</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function saveEntry() {
+            if (!currentFeature) return;
+            const type = document.getElementById('entryType').value.trim();
+            const date = document.getElementById('entryDate').value.trim();
+            const culture = document.getElementById('entryCulture').value.trim();
+            const image = document.getElementById('entryImage').value.trim();
+            const text = document.getElementById('entryText').value.trim();
+
+            if (!entryData[currentFeature]) entryData[currentFeature] = [];
+            entryData[currentFeature].push({ type, date, culture, image, text });
+            persistEntries();
+            document.getElementById('entryType').value = '';
+            document.getElementById('entryDate').value = '';
+            document.getElementById('entryCulture').value = '';
+            document.getElementById('entryImage').value = '';
+            document.getElementById('entryText').value = '';
+            renderEntryList();
+            showMessage('Entry kaydedildi.', 'success');
+        }
+
+        function deleteEntry(index) {
+            if (!currentFeature) return;
+            entryData[currentFeature].splice(index, 1);
+            persistEntries();
+            renderEntryList();
+            showMessage('Entry silindi.', 'info');
+        }
+
+        function loadStoredEntries() {
+            try {
+                const raw = localStorage.getItem('wikidata-cemetery-entries');
+                return raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                console.warn('Entries yüklenemedi', e);
+                return {};
+            }
+        }
+
+        function persistEntries() {
+            localStorage.setItem('wikidata-cemetery-entries', JSON.stringify(entryData));
+        }
+
+        function escapeHtml(str) {
+            return (str || '').replace(/[&<>"]|'/g, c => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[c]);
+        }
+    </script>
+</body>
+</html>
