@@ -23,6 +23,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const panelLabelNode = document.getElementById('panel-label');
 const panelInstanceNode = document.getElementById('panel-instance');
 const panelStatusNode = document.getElementById('panel-status');
+const panelDateNode = document.getElementById('panel-date');
 const panelMeIdNode = document.getElementById('panel-me-id');
 const editorContainer = document.getElementById('entry-editor-container');
 const editorSurface = document.getElementById('entry-editor');
@@ -36,8 +37,9 @@ const panelCountNode = document.getElementById('cemetery-count');
 const STORAGE_KEY = 'me-inventory-entries';
 const COUNTER_KEY = 'me-inventory-counter';
 const DEFAULT_SELECTION_MESSAGE = 'Envanter notlarını düzenleyebilirsiniz.';
-const COUNT_LOADING_TEXT = 'Toplam mezarlık: yükleniyor…';
-const COUNT_ERROR_TEXT = 'Toplam mezarlık: yüklenemedi.';
+const COUNT_LOADING_TEXT = 'Toplam hazire: yükleniyor…';
+const COUNT_ERROR_TEXT = 'Toplam hazire: yüklenemedi.';
+const DATE_UNKNOWN_TEXT = 'Bilgi bulunamadı';
 const WIKIDATA_ENDPOINT = 'https://query.wikidata.org/sparql';
 
 let entriesStore = loadEntriesFromStorage();
@@ -105,7 +107,7 @@ function updateCemeteryCount(count) {
   }
 
   if (typeof count === 'number' && Number.isFinite(count)) {
-    panelCountNode.textContent = `Toplam mezarlık: ${count.toLocaleString('tr-TR')}`;
+    panelCountNode.textContent = `Toplam hazire: ${count.toLocaleString('tr-TR')}`;
     return;
   }
 
@@ -124,7 +126,7 @@ function loadEntriesFromStorage() {
       return parsed;
     }
   } catch (error) {
-    console.warn('Kayıtlı mezarlık verileri okunamadı:', error);
+    console.warn('Kayıtlı hazire verileri okunamadı:', error);
   }
 
   return {};
@@ -134,7 +136,7 @@ function saveEntriesToStorage(value) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
   } catch (error) {
-    console.warn('Mezarlık verileri kaydedilemedi:', error);
+    console.warn('Hazire verileri kaydedilemedi:', error);
   }
 }
 
@@ -200,8 +202,17 @@ function setEditorEnabled(enabled) {
 
   if (!enabled) {
     editorSurface.innerHTML = '';
+    if (panelLabelNode) {
+      panelLabelNode.textContent = 'Haritadan bir hazire seçin';
+    }
+    if (panelInstanceNode) {
+      panelInstanceNode.textContent = '—';
+    }
     if (panelMeIdNode) {
       panelMeIdNode.textContent = 'Henüz oluşturulmadı';
+    }
+    if (panelDateNode) {
+      panelDateNode.textContent = '—';
     }
     renderImageGallery([]);
   }
@@ -326,7 +337,7 @@ function renderImageGallery(images) {
     const img = document.createElement('img');
     img.className = 'gallery__image';
     img.src = image.dataUrl;
-    img.alt = image.name ? `Mezarlık görseli: ${image.name}` : 'Mezarlık görseli';
+    img.alt = image.name ? `Hazire görseli: ${image.name}` : 'Hazire görseli';
     item.appendChild(img);
 
     const removeButton = document.createElement('button');
@@ -481,6 +492,9 @@ function openEntryPanel(entry) {
 
   panelLabelNode.textContent = entry.label;
   panelInstanceNode.textContent = entry.instanceLabel;
+  if (panelDateNode) {
+    panelDateNode.textContent = entry.inceptionDisplay || DATE_UNKNOWN_TEXT;
+  }
   currentEntryKey = entry.id;
   currentEntryState = cloneEntryState(currentEntryKey);
   setEditorEnabled(true);
@@ -568,12 +582,35 @@ function parseWktCoordinates(value) {
   return [latitude, longitude];
 }
 
+function formatInceptionDate(value) {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
+
+  const parsedDate = new Date(value);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    try {
+      return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long' }).format(parsedDate);
+    } catch (error) {
+      console.warn('Inception date could not be formatted with locale:', error);
+      return parsedDate.toISOString().split('T')[0];
+    }
+  }
+
+  const yearMatch = value.match(/(-?\d{3,4})/);
+  if (yearMatch) {
+    return yearMatch[1];
+  }
+
+  return null;
+}
+
 function createEntryFromBinding(binding) {
   if (!binding) {
     return null;
   }
 
-  const coordinates = parseWktCoordinates(binding.coord?.value);
+  const coordinates = parseWktCoordinates(binding.location?.value);
   if (!coordinates) {
     return null;
   }
@@ -585,12 +622,16 @@ function createEntryFromBinding(binding) {
 
   const itemMatch = itemValue.match(/Q\d+$/);
   const itemId = itemMatch ? itemMatch[0] : itemValue;
-  const label = binding.itemLabel?.value?.trim() || 'İsimsiz mezarlık';
+  const label = binding.itemLabel?.value?.trim() || 'İsimsiz hazire';
+  const inceptionRaw = binding.inception?.value || null;
+  const inceptionDisplay = formatInceptionDate(inceptionRaw);
 
   return {
     id: itemId,
     label,
-    instanceLabel: 'Mezarlık',
+    instanceLabel: 'Hazire',
+    inceptionRaw,
+    inceptionDisplay,
     coordinates,
   };
 }
@@ -607,11 +648,13 @@ function addMarker(entry) {
 
   const escapedLabel = escapeHtml(entry.label);
   const escapedInstanceLabel = escapeHtml(entry.instanceLabel);
+  const escapedDate = escapeHtml(entry.inceptionDisplay || DATE_UNKNOWN_TEXT);
 
   const popupContent = `
     <div class="popup-content">
       <strong>${escapedLabel}</strong>
       <span>${escapedInstanceLabel}</span>
+      <span>${escapedDate}</span>
       <button type="button" class="popup-content__button js-open-entry">Envanteri düzenle</button>
     </div>
   `;
@@ -646,16 +689,16 @@ function addMarker(entry) {
   marker.addTo(map);
 }
 
-async function loadCemeteries() {
-  updatePanelStatus("Türkiye'deki mezarlıklar yükleniyor…");
+async function loadHazires() {
+  updatePanelStatus("Türkiye'deki hazireler yükleniyor…");
   updateCemeteryCount(null);
 
-  const sparqlQuery = `# Türkiye sınırları içinde koordinatlı mezarlıklar (tümülüsler hariç)
-SELECT ?item ?itemLabel ?coord WHERE {
-  ?item wdt:P31/wdt:P279* wd:Q39614.
+  const sparqlQuery = `# Türkiye’deki hazireleri listeler
+SELECT ?item ?itemLabel ?location ?inception WHERE {
+  ?item wdt:P31/wdt:P279* wd:Q6034438.
   ?item wdt:P17 wd:Q43.
-  ?item wdt:P625 ?coord.
-  FILTER NOT EXISTS { ?item wdt:P31/wdt:P279* wd:Q34023. }
+  ?item wdt:P625 ?location.
+  OPTIONAL { ?item wdt:P571 ?inception. }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "tr,en". }
 }
 ORDER BY ?itemLabel
@@ -683,19 +726,19 @@ LIMIT 1000`;
       .filter((entry) => entry !== null);
 
     if (entries.length === 0) {
-      updatePanelStatus('Türkiye sınırları içinde mezarlık bulunamadı.');
+      updatePanelStatus('Türkiye sınırları içinde hazire bulunamadı.');
       updateCemeteryCount(0);
       return;
     }
 
     entries.forEach((entry) => addMarker(entry));
-    updatePanelStatus('Haritadan bir mezarlık seçin.');
+    updatePanelStatus('Haritadan bir hazire seçin.');
     updateCemeteryCount(entries.length);
   } catch (error) {
-    console.error('Mezarlıklar yüklenirken bir hata oluştu:', error);
-    updatePanelStatus('Mezarlıklar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+    console.error('Hazireler yüklenirken bir hata oluştu:', error);
+    updatePanelStatus('Hazireler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
     updateCemeteryCount(undefined);
   }
 }
 
-loadCemeteries();
+loadHazires();

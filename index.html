@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Türkiye Mezarlık Haritası</title>
+    <title>Türkiye Hazire Haritası</title>
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -15,15 +15,17 @@
     <div class="layout">
       <div id="map" class="map" aria-label="Türkiye haritası"></div>
       <aside class="panel" id="entry-panel">
-        <h2 class="panel-title">Mezarlık detayları</h2>
+        <h2 class="panel-title">Hazire detayları</h2>
         <p class="panel-status" id="panel-status">
-          Türkiye'deki mezarlıklar yükleniyor…
+          Türkiye'deki hazireler yükleniyor…
         </p>
         <dl class="entry-details">
           <dt>Adı</dt>
-          <dd class="entry-name" id="panel-label">Haritadan bir mezarlık seçin</dd>
-          <dt>Türü</dt>
+          <dd class="entry-name" id="panel-label">Haritadan bir hazire seçin</dd>
+          <dt>Kategori</dt>
           <dd class="entry-instance" id="panel-instance">&mdash;</dd>
+          <dt>Tarih</dt>
+          <dd class="entry-date" id="panel-date">&mdash;</dd>
           <dt>ME ID</dt>
           <dd class="entry-id" id="panel-me-id">Henüz oluşturulmadı</dd>
         </dl>
@@ -31,7 +33,7 @@
           <header class="editor__header">
             <h3 class="editor__title">Envanter notları</h3>
             <p class="editor__hint">
-              Haritadan bir mezarlık seçtikten sonra açıklama ekleyebilir, düzenleyebilir ve görseller
+              Haritadan bir hazire seçtikten sonra açıklama ekleyebilir, düzenleyebilir ve görseller
               yükleyebilirsiniz.
             </p>
           </header>
@@ -62,7 +64,7 @@
             contenteditable="true"
             role="textbox"
             aria-multiline="true"
-            aria-label="Mezarlık envanteri açıklaması"
+            aria-label="Hazire envanteri açıklaması"
             spellcheck="true"
           ></div>
           <div class="editor__actions">
@@ -74,7 +76,7 @@
             <ul class="gallery__list" id="image-gallery"></ul>
           </section>
           <footer class="panel-footer">
-            <p id="cemetery-count" class="panel-count">Toplam mezarlık: yükleniyor…</p>
+            <p id="cemetery-count" class="panel-count">Toplam hazire: yükleniyor…</p>
           </footer>
         </section>
       </aside>

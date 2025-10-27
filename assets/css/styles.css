@@ -233,6 +233,11 @@ dd {
   gap: 0.5rem;
 }
 
+.popup-content span {
+  font-size: 0.875rem;
+  color: #475569;
+}
+
 .popup-content__button {
   display: inline-flex;
   align-items: center;
