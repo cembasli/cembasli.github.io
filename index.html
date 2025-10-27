@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>City Map</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-o9N1j7kG2GZ7HCS1sP4JziWXg9uEApFeujtGZ8A5pFk="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <div id="map" class="map"></div>
+      <aside class="panel" id="entry-panel">
+        <h2 class="panel-title">Entry details</h2>
+        <dl>
+          <dt>Label</dt>
+          <dd class="entry-name" id="panel-label">Select a marker</dd>
+          <dt>Instance</dt>
+          <dd class="entry-instance" id="panel-instance">&mdash;</dd>
+        </dl>
+      </aside>
+    </div>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-o9N1j7kG2GZ7HCS1sP4JziWXg9uEApFeujtGZ8A5pFk="
+      crossorigin=""
+    ></script>
+    <script src="assets/js/map.js"></script>
+  </body>
+</html>

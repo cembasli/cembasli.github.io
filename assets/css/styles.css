@@ -1,0 +1,66 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+.map {
+  flex: 1 1 auto;
+  min-height: 100%;
+}
+
+.panel {
+  width: 320px;
+  padding: 1.5rem;
+  background-color: #f6f8fa;
+  border-left: 1px solid #d0d7de;
+  overflow-y: auto;
+}
+
+.panel-title {
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+dl {
+  margin: 0;
+}
+
+dt {
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+dd {
+  margin: 0.25rem 0 0;
+}
+
+.popup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.popup-content__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  color: #fff;
+  background-color: #2563eb;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.popup-content__button:hover {
+  background-color: #1d4ed8;
+}
