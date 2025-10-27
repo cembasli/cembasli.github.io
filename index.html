@@ -4,30 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Türkiye Mezarlıkları Haritası</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" integrity="sha512-sA+e2sU6UjeRGna43EIBgzHuLlHotE5T7V6czS4fFqqTZPIYOvToNiOfzmiEJeZVr3ePwFsypIk7wLrjCmq80Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" 
+          integrity="sha512-sA+e2sU6UjeRGna43EIBgzHuLlHotE5T7V6czS4fFqqTZPIYOvToNiOfzmiEJeZVr3ePwFsypIk7wLrjCmq80Q==" 
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-67Y2J3VKBJ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);} 
+      function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-67Y2J3VKBJ');
     </script>
     <style>
-        :root {
-            color-scheme: light;
-        }
-        * {
-            box-sizing: border-box;
-        }
+        :root { color-scheme: light; }
+        * { box-sizing: border-box; }
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #073763 0%, #021526 100%);
             color: #0f172a;
         }
-        a {
-            color: inherit;
-        }
+        a { color: inherit; }
         header {
             padding: 40px 20px 20px;
             text-align: center;
@@ -192,9 +188,7 @@
             transition: right 0.35s ease;
             z-index: 1200;
         }
-        .side-panel.active {
-            right: 0;
-        }
+        .side-panel.active { right: 0; }
         .side-panel header {
             text-align: left;
             padding: 0 0 16px;
@@ -210,10 +204,7 @@
             font-size: 20px;
             cursor: pointer;
         }
-        .panel-subtitle {
-            color: #94a3b8;
-            margin: 6px 0 18px;
-        }
+        .panel-subtitle { color: #94a3b8; margin: 6px 0 18px; }
         .entry-card {
             background: rgba(15,23,42,0.75);
             border: 1px solid rgba(148,163,184,0.18);
@@ -221,10 +212,7 @@
             padding: 16px;
             margin-bottom: 18px;
         }
-        .entry-card h4 {
-            margin: 0 0 8px;
-            color: #38bdf8;
-        }
+        .entry-card h4 { margin: 0 0 8px; color: #38bdf8; }
         .entry-meta {
             display: flex;
             flex-wrap: wrap;
@@ -256,19 +244,14 @@
             padding: 18px;
             margin-top: 24px;
         }
-        .entry-form h4 {
-            margin: 0 0 12px;
-            color: #38bdf8;
-        }
+        .entry-form h4 { margin: 0 0 12px; color: #38bdf8; }
         .entry-form label {
             display: block;
             font-weight: 600;
             margin: 12px 0 6px;
             color: #e0f2fe;
         }
-        .entry-form input,
-        .entry-form textarea,
-        .entry-form select {
+        .entry-form input, .entry-form textarea, .entry-form select {
             width: 100%;
             padding: 10px 12px;
             border-radius: 10px;
@@ -276,10 +259,7 @@
             background: rgba(15,23,42,0.6);
             color: #f8fafc;
         }
-        .entry-form textarea {
-            min-height: 90px;
-            resize: vertical;
-        }
+        .entry-form textarea { min-height: 90px; resize: vertical; }
         .entry-form button {
             margin-top: 14px;
             width: 100%;
@@ -301,12 +281,8 @@
             margin: 20px 0;
         }
         @media (max-width: 768px) {
-            header {
-                padding-top: 28px;
-            }
-            .controls {
-                gap: 16px;
-            }
+            header { padding-top: 28px; }
+            .controls { gap: 16px; }
         }
     </style>
 </head>
@@ -322,6 +298,7 @@
                     <label for="provinceSelect">İl seçiniz</label>
                     <select id="provinceSelect" onchange="handleProvinceChange()">
                         <option value="">İl seçiniz…</option>
+                        <!-- İl seçenekleri aşağı -->
                         <option value="Q40549">Adana</option>
                         <option value="Q43924">Adıyaman</option>
                         <option value="Q45220">Afyonkarahisar</option>
@@ -417,11 +394,11 @@
             <div class="legend">
                 <div class="legend-item">
                     <span class="legend-swatch" style="background:#2563eb;"></span>
-                    <span>Wikidata mezarlığı</span>
+                    <span>Wikidata mezarlığı (cemetery)</span>
                 </div>
                 <div class="legend-item">
                     <span class="legend-swatch" style="background:#facc15;"></span>
-                    <span>Graveyard (tarihi/ küçük alan)</span>
+                    <span>Graveyard (küçük/historik mezarlık)</span>
                 </div>
             </div>
             <div id="messages"></div>
@@ -476,7 +453,9 @@
         </div>
     </aside>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" integrity="sha512-VzJZnN2JgsFnmpt5TR1+t0NenE2no0RvrRZtGJPD7W82dManIeZDV4SSQdlqzTeWY5Avzk1lIoasJl0f5pmQmA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" 
+            integrity="sha512-VzJZnN2JgsFnmpt5TR1+t0NenE2no0RvrRZtGJPD7W82dManIeZDV4SSQdlqzTeWY5Avzk1lIoasJl0f5pmQmA==" 
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
         const istanbulDistricts = [
             {qid: "Q1020668", name: "Adalar"},
@@ -520,9 +499,9 @@
             {qid: "Q197095", name: "Zeytinburnu"}
         ];
 
-        let map = L.map('map').setView([39.0, 35.0], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+        let map = L.map('map').setView([39.0,35.0],6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+            attribution:'© OpenStreetMap contributors'
         }).addTo(map);
         let markersLayer = L.layerGroup().addTo(map);
 
@@ -530,124 +509,130 @@
         let currentFeature = null;
         let entryData = loadStoredEntries();
 
-        function handleProvinceChange() {
-            const provinceValue = document.getElementById('provinceSelect').value;
+        function handleProvinceChange(){
+            const province = document.getElementById('provinceSelect').value;
             const districtGroup = document.getElementById('districtGroup');
             const districtSelect = document.getElementById('districtSelect');
             districtSelect.innerHTML = '';
-            if (provinceValue === 'Q534799') {
-                districtGroup.style.display = 'block';
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = 'Tüm ilçeler';
-                districtSelect.appendChild(defaultOption);
-                istanbulDistricts.forEach(d => {
+            if(province === 'Q534799'){ // İstanbul
+                districtGroup.style.display='block';
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value=''; defaultOpt.textContent='Tüm ilçeler';
+                districtSelect.appendChild(defaultOpt);
+                istanbulDistricts.forEach(d=>{
                     const opt = document.createElement('option');
-                    opt.value = d.qid;
-                    opt.textContent = d.name;
+                    opt.value=d.qid; opt.textContent=d.name;
                     districtSelect.appendChild(opt);
                 });
             } else {
-                districtGroup.style.display = 'none';
+                districtGroup.style.display='none';
             }
         }
 
-        function showMessage(text, type = 'info') {
-            const container = document.getElementById('messages');
+        function showMessage(text,type='info'){
+            const cont = document.getElementById('messages');
             const el = document.createElement('div');
             el.textContent = text;
-            el.className = type === 'error' ? 'message-error' : type === 'success' ? 'message-success' : 'message-info';
-            container.appendChild(el);
-            setTimeout(() => el.remove(), 5000);
+            el.className = type==='error' ? 'message-error' : type==='success' ? 'message-success' : 'message-info';
+            cont.appendChild(el);
+            setTimeout(()=>el.remove(),5000);
         }
 
-        async function loadCemeteries() {
+        async function loadCemeteries(){
             const province = document.getElementById('provinceSelect').value;
             const district = document.getElementById('districtSelect').value;
-            if (!province) {
-                showMessage('Lütfen bir il seçiniz.', 'error');
+            if(!province){
+                showMessage('Lütfen bir il seçiniz.','error');
                 return;
             }
 
             const loadBtn = document.getElementById('loadBtn');
             const loading = document.getElementById('loading');
-            loadBtn.disabled = true;
-            loading.style.display = 'flex';
+            loadBtn.disabled = true; loading.style.display='flex';
             markersLayer.clearLayers();
             togglePanel(false);
 
-            const locationPath = district ? `wdt:P131*/wdt:P131* wd:${district};` : `wdt:P131*/wdt:P131* wd:${province};`;
-            const query = `SELECT DISTINCT ?place ?placeLabel ?coord ?instanceLabel WHERE {
+            const locationClause = district ?
+                `wdt:P131*/wdt:P131* wd:${district} ;` :
+                `wdt:P131*/wdt:P131* wd:${province} ;`;
+
+            const query = `
+SELECT DISTINCT ?place ?placeLabel ?coord ?instanceLabel WHERE {
   VALUES ?instance { wd:Q39614 wd:Q1107656 }
-  ?place wdt:P31 ?instance;
-         ${locationPath}
-         wdt:P625 ?coord.
+  ?place wdt:P31 ?instance ;
+         ${locationClause}
+         wdt:P625 ?coord .
   SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],tr,en". }
 }`;
             const start = performance.now();
-            try {
+            try{
                 const url = 'https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(query);
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if(!response.ok) throw new Error(`HTTP ${response.status}`);
                 const json = await response.json();
                 const results = json.results.bindings || [];
-                const elapsed = ((performance.now() - start) / 1000).toFixed(2);
-                updateStats(results, elapsed);
+                const elapsed = ((performance.now() - start)/1000).toFixed(2);
+                updateStats(results,elapsed);
                 renderMarkers(results);
-                if (results.length > 0) {
-                    const bounds = L.latLngBounds(results.map(r => {
-                        const match = r.coord.value.match(/Point\\(([^ ]+) ([^ ]+)\\)/);
-                        return [parseFloat(match[2]), parseFloat(match[1])];
+                if(results.length){
+                    const bounds = L.latLngBounds(results.map(r=>{
+                        const m = r.coord.value.match(/Point\(([^ ]+) ([^ ]+)\)/);
+                        return [ parseFloat(m[2]), parseFloat(m[1]) ];
                     }));
                     map.fitBounds(bounds.pad(0.15));
                 }
-                showMessage(`${results.length} mezarlık bulundu.`, 'success');
-            } catch (error) {
-                console.error(error);
-                showMessage('Sorgu sırasında hata oluştu: ' + error.message, 'error');
+                showMessage(`${results.length} mezarlık bulundu.`,'success');
+            } catch(err){
+                console.error(err);
+                showMessage('Sorgu hatası: ' + err.message,'error');
             } finally {
-                loadBtn.disabled = false;
-                loading.style.display = 'none';
+                loadBtn.disabled = false; loading.style.display='none';
             }
         }
 
-        function renderMarkers(results) {
+        function renderMarkers(results){
             markersLayer.clearLayers();
-            results.forEach(result => {
-                if (!result.coord || !result.coord.value) return;
-                const match = result.coord.value.match(/Point\\(([^ ]+) ([^ ]+)\\)/);
-                if (!match) return;
-                const lng = parseFloat(match[1]);
-                const lat = parseFloat(match[2]);
-                const qid = result.place.value.split('/').pop();
-                const label = result.placeLabel ? result.placeLabel.value : 'İsimsiz mezarlık';
-                const instanceLabel = result.instanceLabel ? result.instanceLabel.value : '';
-
+            results.forEach(r=>{
+                if(!r.coord.value) return;
+                const m = r.coord.value.match(/Point\(([^ ]+) ([^ ]+)\)/);
+                if(!m) return;
+                const lng = parseFloat(m[1]);
+                const lat = parseFloat(m[2]);
+                const qid = r.place.value.split('/').pop();
+                const label = r.placeLabel.value;
+                const instanceLabel = r.instanceLabel.value;
                 const isGraveyard = instanceLabel.toLowerCase().includes('graveyard');
-                const marker = L.circleMarker([lat, lng], {
-                    radius: 7,
+
+                const marker = L.circleMarker([lat,lng], {
+                    radius:7,
                     color: isGraveyard ? '#facc15' : '#1e40af',
                     fillColor: isGraveyard ? '#facc15' : '#2563eb',
-                    fillOpacity: 0.9,
-                    weight: 2
+                    fillOpacity:0.9,
+                    weight:2
                 }).addTo(markersLayer);
 
-                const popupHtml = `<div style="min-width:200px;">
-                    <h3 style="margin:0 0 8px;color:#1e3a8a;font-size:1rem;">${escapeHtml(label)}</h3>
-                    <p style="margin:0 0 6px;color:#334155;font-size:0.9rem;">Tip: ${escapeHtml(instanceLabel)}</p>
-                    <p style="margin:0 0 8px;font-size:0.9rem;">
-                        <a href="https://www.wikidata.org/wiki/${qid}" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:600;">Wikidata ${qid}</a>
-                    </p>
-                    <button style="padding:8px 12px;border:none;border-radius:10px;background:#2563eb;color:white;font-weight:600;cursor:pointer;" onclick="openEntryPanel('${qid}','${escapeHtml(label)}','${escapeHtml(instanceLabel)}')">Entryleri Aç</button>
-                </div>`;
+                const popupHtml = `
+<div style="min-width:200px;">
+  <h3 style="margin:0 0 8px;color:#1e3a8a;font-size:1rem;">${escapeHtml(label)}</h3>
+  <p style="margin:0 0 6px;font-size:0.9rem;color:#334155;">Tip: ${escapeHtml(instanceLabel)}</p>
+  <p style="margin:0 0 8px;font-size:0.9rem;">
+    <a href="https://www.wikidata.org/wiki/${qid}" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:600;">
+      Wikidata ${qid}
+    </a>
+  </p>
+  <button style="padding:8px 12px;border:none;border-radius:10px;background:#2563eb;color:white;font-weight:600;cursor:pointer;"
+          onclick="openEntryPanel('${qid}','${escapeHtml(label)}','${escapeHtml(instanceLabel)}')">
+    Entryleri Aç
+  </button>
+</div>`;
                 marker.bindPopup(popupHtml);
             });
         }
 
-        function updateStats(results, elapsed) {
+        function updateStats(results, elapsed){
             const total = results.length;
-            const cemetery = results.filter(r => r.instanceLabel && r.instanceLabel.value.includes('cemetery')).length;
-            const graveyard = results.filter(r => r.instanceLabel && r.instanceLabel.value.includes('graveyard')).length;
+            const cemetery = results.filter(r => r.instanceLabel && r.instanceLabel.toLowerCase().includes('cemetery')).length;
+            const graveyard = results.filter(r => r.instanceLabel && r.instanceLabel.toLowerCase().includes('graveyard')).length;
             document.getElementById('statTotal').textContent = total;
             document.getElementById('statCemetery').textContent = cemetery;
             document.getElementById('statGraveyard').textContent = graveyard;
@@ -655,93 +640,96 @@
             document.getElementById('stats').style.display = 'grid';
         }
 
-        function openEntryPanel(qid, label, instanceLabel) {
+        function openEntryPanel(qid,label,instLabel){
             currentFeature = qid;
             document.getElementById('panelTitle').textContent = label;
-            document.getElementById('panelSubtitle').textContent = instanceLabel ? `${instanceLabel} · ${qid}` : qid;
+            document.getElementById('panelSubtitle').textContent = instLabel + ' · ' + qid;
             renderEntryList();
             togglePanel(true);
         }
 
-        function togglePanel(show) {
+        function togglePanel(show){
             entryPanel.classList.toggle('active', show);
         }
 
-        function renderEntryList() {
+        function renderEntryList(){
             const container = document.getElementById('entryList');
             container.innerHTML = '';
             const list = entryData[currentFeature] || [];
-            if (list.length === 0) {
+            if(!list.length){
                 container.innerHTML = '<div class="empty-state">Bu mezarlık için henüz entry eklenmedi.<br>İlk bilgiyi siz ekleyin!</div>';
                 return;
             }
-            list.forEach((entry, index) => {
+            list.forEach((entry,index)=>{
                 const card = document.createElement('article');
-                card.className = 'entry-card';
+                card.className='entry-card';
                 card.innerHTML = `
-                    <h4>${escapeHtml(entry.type || 'Tür belirtilmedi')}</h4>
-                    <div class="entry-meta">
-                        ${entry.date ? `<span>🗓️ ${escapeHtml(entry.date)}</span>` : ''}
-                        ${entry.culture ? `<span>🏛️ ${escapeHtml(entry.culture)}</span>` : ''}
-                    </div>
-                    ${entry.image ? `<img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.type || 'Entry görseli')}" loading="lazy" />` : ''}
-                    ${entry.text ? `<p>${escapeHtml(entry.text)}</p>` : ''}
-                    <button type="button" style="margin-top:12px;width:100%;padding:10px;border-radius:10px;border:none;background:#dc2626;color:#fff;font-weight:600;cursor:pointer;" onclick="deleteEntry(${index})">Entryyi Sil</button>
+  <h4>${escapeHtml(entry.type||'Tür belirtilmedi')}</h4>
+  <div class="entry-meta">
+    ${entry.date?`<span>🗓️ ${escapeHtml(entry.date)}</span>`:''}
+    ${entry.culture?`<span>🏛️ ${escapeHtml(entry.culture)}</span>`:''}
+  </div>
+  ${entry.image?`<img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.type||'Entry görseli')}" loading="lazy"/>`:''}
+  ${entry.text?`<p>${escapeHtml(entry.text)}</p>`:''}
+  <button type="button" style="margin-top:12px;width:100%;padding:10px;border-radius:10px;border:none;background:#dc2626;color:#fff;font-weight:600;cursor:pointer;"
+          onclick="deleteEntry(${index})">
+    Entryyi Sil
+  </button>
                 `;
                 container.appendChild(card);
             });
         }
 
-        function saveEntry() {
-            if (!currentFeature) return;
+        function saveEntry(){
+            if(!currentFeature) return;
             const type = document.getElementById('entryType').value.trim();
             const date = document.getElementById('entryDate').value.trim();
             const culture = document.getElementById('entryCulture').value.trim();
             const image = document.getElementById('entryImage').value.trim();
             const text = document.getElementById('entryText').value.trim();
 
-            if (!entryData[currentFeature]) entryData[currentFeature] = [];
-            entryData[currentFeature].push({ type, date, culture, image, text });
+            if(!entryData[currentFeature]) entryData[currentFeature]=[];
+            entryData[currentFeature].push({type,date,culture,image,text});
             persistEntries();
-            document.getElementById('entryType').value = '';
-            document.getElementById('entryDate').value = '';
-            document.getElementById('entryCulture').value = '';
-            document.getElementById('entryImage').value = '';
-            document.getElementById('entryText').value = '';
+            document.getElementById('entryType').value='';
+            document.getElementById('entryDate').value='';
+            document.getElementById('entryCulture').value='';
+            document.getElementById('entryImage').value='';
+            document.getElementById('entryText').value='';
             renderEntryList();
-            showMessage('Entry kaydedildi.', 'success');
+            showMessage('Entry kaydedildi.','success');
         }
 
-        function deleteEntry(index) {
-            if (!currentFeature) return;
-            entryData[currentFeature].splice(index, 1);
+        function deleteEntry(index){
+            if(!currentFeature) return;
+            entryData[currentFeature].splice(index,1);
             persistEntries();
             renderEntryList();
-            showMessage('Entry silindi.', 'info');
+            showMessage('Entry silindi.','info');
         }
 
-        function loadStoredEntries() {
-            try {
+        function loadStoredEntries(){
+            try{
                 const raw = localStorage.getItem('wikidata-cemetery-entries');
                 return raw ? JSON.parse(raw) : {};
-            } catch (e) {
-                console.warn('Entries yüklenemedi', e);
+            }catch(e){
+                console.warn('Entries yüklenemedi',e);
                 return {};
             }
         }
 
-        function persistEntries() {
+        function persistEntries(){
             localStorage.setItem('wikidata-cemetery-entries', JSON.stringify(entryData));
         }
 
-        function escapeHtml(str) {
-            return (str || '').replace(/[&<>"]|'/g, c => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            })[c]);
+        function escapeHtml(str){
+            return (str||'').replace(/[&<>"']/g, c => ({
+                '&':'&amp;',
+                '<':'&lt;',
+                '>':'&gt;',
+                '"':'&quot;',
+                "'":'&#39;'
+            }[c]));
         }
     </script>
 </body>
