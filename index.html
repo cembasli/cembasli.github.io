@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Türkiye Mezarlıkları Haritası</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+      integrity="sha512-kZmmYHr0bL9g2zsbG2drXr/7EQo1leChX2NDSSSXqoQZnIcEqplLWYwgdENqOZgdKzac8AjtKqYJIukdwZ4Akw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Türkiye Mezarlıkları Haritası</h1>
+        <p>Wikidata verileri ve yerel kayıtlarla mezarlıkları keşfedin.</p>
+      </div>
+    </header>
+
+    <main>
+      <section class="controls container">
+        <div class="control-group">
+          <label for="provinceInput">İl (Wikidata QID veya boş bırakın)</label>
+          <input
+            type="text"
+            id="provinceInput"
+            placeholder="Örn: Q48340 (İstanbul)"
+          />
+        </div>
+        <div class="control-group">
+          <label for="districtInput">İlçe (Wikidata QID veya boş bırakın)</label>
+          <input
+            type="text"
+            id="districtInput"
+            placeholder="Örn: Q189231 (Kadıköy)"
+          />
+        </div>
+        <button id="loadButton" class="primary">Mezarlıkları Getir</button>
+      </section>
+
+      <section class="map-wrapper">
+        <div id="map"></div>
+      </section>
+    </main>
+
+    <aside id="editorPanel" class="editor-panel" aria-hidden="true">
+      <div class="editor-header">
+        <h2 id="editorTitle">Mezarlık Kaydı</h2>
+        <button id="closeEditor" class="plain" aria-label="Paneli kapat">✖</button>
+      </div>
+      <div class="editor-body">
+        <div class="field">
+          <label for="editorNotes">Yerel Notlar</label>
+          <textarea id="editorNotes" rows="6" placeholder="Not veya transkripsiyon ekleyin"></textarea>
+        </div>
+        <div class="field">
+          <label for="editorImageUrl">Görsel URL’si</label>
+          <div class="inline">
+            <input
+              type="url"
+              id="editorImageUrl"
+              placeholder="https://..."
+            />
+            <button id="addImage" class="secondary">Ekle</button>
+          </div>
+        </div>
+        <div class="gallery" id="editorGallery" aria-live="polite"></div>
+      </div>
+      <div class="editor-footer">
+        <button id="saveEntry" class="primary">Kaydet</button>
+      </div>
+    </aside>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"
+      integrity="sha512-Rksm4b58rYhCemIWGAaHo9dZYkTfGZNVVRhk1FdYyfisS/fWznuaCG2lKT9IgrnJ1pG7n/36CkeDg7kP1LoOWg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script type="module" src="assets/js/app.js"></script>
+  </body>
+</html>

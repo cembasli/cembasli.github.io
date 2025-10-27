@@ -1,2 +1,13 @@
+# Türkiye Mezarlıkları Haritası
+
+Leaflet ve Wikidata sorgularını kullanarak Türkiye'deki mezarlıkları keşfetmeye yardımcı olan küçük bir uygulama.
+
+## Geliştirme
+
+Projeyi yerelde çalıştırmak için statik bir sunucu yeterlidir:
+
+```bash
 python -m http.server
-```​:codex-file-citation[codex-file-citation]{line_range_start=13 line_range_end=18 path=README.md git_url="https://github.com/cembasli/cembasli.github.io/blob/main/README.md#L13-L18"}​
+```
+
+Sunucu çalıştıktan sonra tarayıcıdan `http://localhost:8000` adresine giderek uygulamayı görebilirsiniz.
